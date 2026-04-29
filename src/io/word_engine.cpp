@@ -641,6 +641,7 @@ QVariant QWord::getCellValue(int row, int column)					//获取单元格内容 �
     QAxObject* table = selection->querySubObject("Tables(1)");
     if(nullptr!=selection&&nullptr!=table)
         return table->querySubObject("Cell(int, int)",row,column)->querySubObject("Range")->property("Text");
+    return QVariant();
 }
 int QWord::getTableCount()
 {

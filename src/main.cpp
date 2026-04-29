@@ -2,8 +2,7 @@
 #include <QScreen>
 
 #include "ElaApplication.h"
-#include "ElaLog.h"
-#include "mainwindow.h"
+#include "main_window.h"
 #include <Windows.h>
 
 int main(int argc, char* argv[])

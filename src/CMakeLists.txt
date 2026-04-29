@@ -1,19 +1,19 @@
 # 先添加io子目录
 add_subdirectory(io)
+add_subdirectory(core)
 
-qt_add_executable(${PROJECT_NAME}
-    MANUAL_FINALIZATION
+add_executable(${PROJECT_NAME}
     main.cpp
-    mainwindow.h
-    mainwindow.cpp
+    main_window.h
+    main_window.cpp
+    music_window.h
+    music_window.cpp
 )
-
-# 确保LCX.io先构建
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}.io)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     ${LIBS}
     ${PROJECT_NAME}.io
+    ${PROJECT_NAME}.core
 )
 
 qt_add_resources(${PROJECT_NAME} "LCX"
