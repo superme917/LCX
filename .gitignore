@@ -57,5 +57,5 @@ compile_commands.json
 /.idea
 *.clang-format
 
-# 保留d3party下的dll
-!d3party/**/*.dll
+# 保留d3party下的所有文件
+!d3party/**
