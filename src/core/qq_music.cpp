@@ -1,3 +1,7 @@
+//
+// Create By WangYiFan on 2026/04/30
+//
+
 #include "core/qq_music.h"
 #include <QApplication>
 #include <execution>

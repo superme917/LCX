@@ -1,3 +1,7 @@
+//
+// Create By WangYiFan on 2026/04/30
+//
+
 #ifndef QQ_MUSIC_H
 #define QQ_MUSIC_H
 

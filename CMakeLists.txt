@@ -14,7 +14,7 @@ include_directories(d3party/QCloudMusicApi/QCloudMusicApi)
 include_directories(${PROJECT_SOURCE_DIR}/src)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Network AxContainer)
-set(LIBS 
+set(LIBS
     Qt6::Widgets
     Qt6::Network
     Qt6::AxContainer
