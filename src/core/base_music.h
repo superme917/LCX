@@ -20,7 +20,6 @@ const QMap<QChar, QChar> symbolMap = {
 struct Song
 {
     Song() {}
-
     QVector<QString> lyric;
     QVector<int> timeIndex;
     QVector<QString> tLyric;

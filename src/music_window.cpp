@@ -4,20 +4,24 @@
 
 #include "music_window.h"
 
-#include <ElaComboBox.h>
-#include <ElaLineEdit.h>
-#include <ElaPushButton.h>
-#include <ElaTableView.h>
-#include <ElaProgressBar.h>
-#include <ElaText.h>
-#include <ElaTheme.h>
-#include <ElaMessageBar.h>
+#include <ElaWidgetTools/ElaComboBox.h>
+#include <ElaWidgetTools/ElaLineEdit.h>
+#include <ElaWidgetTools/ElaPushButton.h>
+#include <ElaWidgetTools/ElaTableView.h>
+#include <ElaWidgetTools/ElaProgressBar.h>
+#include <ElaWidgetTools/ElaText.h>
+#include <ElaWidgetTools/ElaTheme.h>
+#include <ElaWidgetTools/ElaMessageBar.h>
+#include <ElaWidgetTools/ElaMenu.h>
 #include <QHeaderView>
 #include <QIcon>
 #include <QHBoxLayout>
 #include <QFileDialog>
+#include <QContextMenuEvent>
 #include "core/qq_music.h"
+#include "core/cloud_music.h"
 #include "io/word_export.h"
+#include "io/export_wait_dialog.h"
 
 MusicTableViewModel::MusicTableViewModel(QObject* parent)
     : QAbstractTableModel{parent}
@@ -30,7 +34,7 @@ MusicTableViewModel::~MusicTableViewModel()
 
 int MusicTableViewModel::rowCount(const QModelIndex& parent) const
 {
-    return 100;
+    return dataList_.size();
 }
 
 int MusicTableViewModel::columnCount(const QModelIndex& parent) const
@@ -42,17 +46,17 @@ QVariant MusicTableViewModel::data(const QModelIndex& index, int role) const
 {
     if (role == Qt::DisplayRole && index.column() != 0)
     {
-        return data_list_[index.row() % 9][index.column() - 1];
+        return dataList_[index.row()][index.column() - 1];
     }
     else if (role == Qt::DecorationRole && index.column() == 0)
     {
-        return icon_list_[index.row() % 9];
+        return iconList_[index.row()];
     }
     else if (role == Qt::DecorationPropertyRole)
     {
         return Qt::AlignCenter;
     }
-    else if (role == Qt::TextAlignmentRole && index.column() == 4)
+    else if (role == Qt::TextAlignmentRole)
     {
         return Qt::AlignCenter;
     }
@@ -75,21 +79,55 @@ void MusicTableViewModel::setHeader()
 
 void MusicTableViewModel::setSongsList(const QVector<QVector<QString>> &songsList)
 {
-    data_list_ = songsList;
+    dataList_ = songsList;
 }
 
 void MusicTableViewModel::setIconLIst(const QString &pictureLink)
 {
-    for (int i = 0; i < data_list_.size(); ++i) {
-        icon_list_.append(QIcon(QPixmap(pictureLink).scaled(38, 38, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
+    for (int i = 0; i < dataList_.size(); ++i) {
+        iconList_.append(QIcon(QPixmap(pictureLink).scaled(38, 38, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
     }
+}
+
+MusicTableView::MusicTableView(QWidget* parent) : ElaTableView(parent) {
+    menu_ = new ElaMenu(this);
+    QAction* fanyi = menu_->addElaIconAction(ElaIconType::Xmark, "翻译");
+    QAction* yinyi = menu_->addElaIconAction(ElaIconType::Xmark, "音译");
+    fanyi->setCheckable(true);
+    yinyi->setCheckable(true);
+    connect(fanyi, &QAction::triggered, this, [this, fanyi](bool checked){
+        if (checked) {
+            fanyi->setProperty("ElaIconType", QChar(ElaIconType::Check));
+        } else {
+            fanyi->setProperty("ElaIconType", QChar(ElaIconType::Xmark));
+        }
+        emit translateLyric(checked);
+    });
+    connect(yinyi, &QAction::triggered, this, [this, yinyi](bool checked){
+        if (checked) {
+            yinyi->setProperty("ElaIconType", QChar(ElaIconType::Check));
+        } else {
+            yinyi->setProperty("ElaIconType", QChar(ElaIconType::Xmark));
+        }
+        emit rTranslateLyric(checked);
+    });
+}
+
+void MusicTableView::contextMenuEvent(QContextMenuEvent *event)
+{
+    auto context_idx = indexAt(event->pos());
+
+    if (context_idx.isValid()) {
+        menu_->exec(event->globalPos());
+    }
+    QTableView::contextMenuEvent(event);
 }
 
 bool MusicTableViewModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     if (index.isValid()) {
         beginResetModel();
-        data_list_[index.row()][index.column() - 1] = value.toString();
+        dataList_[index.row()][index.column() - 1] = value.toString();
         endResetModel();
         return true;
     }
@@ -110,7 +148,7 @@ MusicWindow::MusicWindow(QWidget *parent)
     ElaPushButton *importButton = new ElaPushButton("读取歌单", this);
     ElaPushButton *exportButton = new ElaPushButton("导出歌单", this);
 
-    songList_ = new ElaTableView(this);
+    songList_ = new MusicTableView(this);
     QFont songListHeaderFont = songList_->horizontalHeader()->font();
     songListHeaderFont.setPixelSize(16);
     songList_->setAlternatingRowColors(true);
@@ -154,16 +192,13 @@ MusicWindow::MusicWindow(QWidget *parent)
 
     connect(importButton, &ElaPushButton::clicked, this, &MusicWindow::onImportButtomClicked);
     connect(exportButton, &ElaPushButton::clicked, this, &MusicWindow::onExportButtonClicked);
+    connect(songList_, &MusicTableView::translateLyric, this, &MusicWindow::onTranslateLyric);
+    connect(songList_, &MusicTableView::rTranslateLyric, this, &MusicWindow::onRTranslateLyric);
     connect(songList_, &ElaTableView::clicked, this, &MusicWindow::onClicked);
-    // connect(songList_, &ElaTableView::translateLyric, this, &MusicWindow::onTranslateLyric);
-    // connect(songList_, &ElaTableView::rTranslateLyric, this, &MusicWindow::onRTranslateLyric);
 }
 
 MusicWindow::~MusicWindow()
 {
-    // if (waitPage_) {
-    //     waitPage_->deleteLater();
-    // }
 }
 
 void MusicWindow::resizeEvent(QResizeEvent *event)
@@ -187,7 +222,7 @@ void MusicWindow::onImportButtomClicked()
         ElaMessageBar::warning(ElaMessageBarType::BottomRight, "警告", "歌单链接为空!", 2000, this);
     } else {
         if (musicPlatform_->currentText() == "网易云音乐") {
-            // musicApi_ = new cloudMusic();
+            music_ = new CloudMusic(this);
         } else if (musicPlatform_->currentText() == "QQ音乐") {
             music_ = new QQMusic(this);
         } else if (musicPlatform_->currentText() == "酷狗音乐") {
@@ -210,15 +245,66 @@ void MusicWindow::onExportButtonClicked()
     }
     QString path = QFileDialog::getExistingDirectory(this, "选择导出路径");
     if (path.isEmpty()) {
-        ElaMessageBar::warning(ElaMessageBarType::PositionPolicy::BottomRight, "警告", "路径选择为空", 2000, this);
         return;
     }
     path += "/music.doc";
 
+    // 创建等待对话框
+    exportWaitDialog_ = new ExportWaitDialog(this);
+    connect(exportWaitDialog_, &ExportWaitDialog::cancelRequested, this, &MusicWindow::onExportCanceled);
+
+    // 创建导出对象
     word_export_ = new WordExport(this);
     word_export_->setExportSongs(music_->getSongs());
     word_export_->setExportPath(path);
+
+    // 连接导出信号
+    connect(word_export_, &WordExport::creatWordFinished, this, &MusicWindow::onCreatWordFinished);
+    connect(word_export_, &WordExport::exportProgress, this, &MusicWindow::onExportProgress);
+    connect(word_export_, &WordExport::exportFinished, this, &MusicWindow::onExportFinished);
+    connect(word_export_, &WordExport::exportCanceled, this, &MusicWindow::onExportCanceled);
+
+    // 显示等待对话框
+    exportWaitDialog_->setStatusText("正在创建Word文档...");
+    exportWaitDialog_->show();
+    exportWaitDialog_->activateWindow();
+
+    // 开始导出
     word_export_->doWork();
+}
+
+void MusicWindow::onCreatWordFinished()
+{
+    exportWaitDialog_->setStatusText("正在导出歌词...");
+}
+
+void MusicWindow::onExportProgress(int total, int current)
+{
+    exportWaitDialog_->setMaxTotal(total);
+    exportWaitDialog_->setProgress(total, current);
+}
+
+void MusicWindow::onExportFinished()
+{
+    if (exportWaitDialog_) {
+        exportWaitDialog_->hide();
+        exportWaitDialog_->deleteLater();
+        exportWaitDialog_ = nullptr;
+    }
+    ElaMessageBar::success(ElaMessageBarType::PositionPolicy::BottomRight, "Success", "歌单导出成功！", 3000, this);
+}
+
+void MusicWindow::onExportCanceled()
+{
+    if (word_export_ && word_export_->isRunning()) {
+        word_export_->cancel();
+    }
+    if (exportWaitDialog_) {
+        exportWaitDialog_->hide();
+        exportWaitDialog_->deleteLater();
+        exportWaitDialog_ = nullptr;
+    }
+    ElaMessageBar::warning(ElaMessageBarType::PositionPolicy::BottomRight, "提示", "已取消导出", 2000, this);
 }
 
 void MusicWindow::onErrorOccurred(QString error)
@@ -254,52 +340,52 @@ void MusicWindow::ontaskFinished()
 
 void MusicWindow::onClicked(QModelIndex index)
 {
-    // if (index.column() == 5 || index.column() == 6) {
-    //     QString data = index.data().toString();
-    //     if (data == "⛔️") {
-    //         onErrorOccurred(index.column() == 5 ? "该歌曲不支持中译!" : "该歌曲不支持音译");
-    //         return;
-    //     } else if (data == "✔️") {
-    //         songList_->model()->setData(index, QString("❌"));
-    //         if (index.column() == 5) {
-    //             musicApi_->songs()[index.row()].showTranslate = false;
-    //         } else {
-    //             musicApi_->songs()[index.row()].showRTranslate = false;
-    //         }
-    //     } else {
-    //         songList_->model()->setData(index, QString("✔️"));
-    //         if (index.column() == 5) {
-    //             musicApi_->songs()[index.row()].showTranslate = true;
-    //         } else {
-    //             musicApi_->songs()[index.row()].showRTranslate = true;
-    //         }
-    //     }
-    //     songList_->update(index);
-    // }
+    if (index.column() == 5 || index.column() == 6) {
+        QString data = index.data().toString();
+        if (data == "⛔️") {
+            onErrorOccurred(index.column() == 5 ? "该歌曲不支持中译!" : "该歌曲不支持音译");
+            return;
+        } else if (data == "✔️") {
+            songList_->model()->setData(index, QString("❌"));
+            if (index.column() == 5) {
+                music_->songs()[index.row()].showTranslate = false;
+            } else {
+                music_->songs()[index.row()].showRTranslate = false;
+            }
+        } else {
+            songList_->model()->setData(index, QString("✔️"));
+            if (index.column() == 5) {
+                music_->songs()[index.row()].showTranslate = true;
+            } else {
+                music_->songs()[index.row()].showRTranslate = true;
+            }
+        }
+        songList_->update(index);
+    }
 }
 
 void MusicWindow::onTranslateLyric(bool check)
 {
-    // for (int i = 0; i < songList_->model()->rowCount(); ++i) {
-    //     QModelIndex index = songList_->model()->index(i, 5);
-    //     if (index.data() != "⛔️") {
-    //         songList_->model()->setData(index, QString(check ? "✔️" : "❌"));
-    //         musicApi_->songs()[i].showTranslate = check;
-    //     }
-    // }
-    // showTranslate = check;
-    // songList_->update();
+    for (int i = 0; i < songList_->model()->rowCount(); ++i) {
+        QModelIndex index = songList_->model()->index(i, 5);
+        if (index.data() != "⛔️") {
+            songList_->model()->setData(index, QString(check ? "✔️" : "❌"));
+            music_->songs()[i].showTranslate = check;
+        }
+    }
+    showTranslate = check;
+    songList_->update();
 }
 
 void MusicWindow::onRTranslateLyric(bool check)
 {
-    // for (int i = 0; i < songList_->model()->rowCount(); ++i) {
-    //     QModelIndex index = songList_->model()->index(i, 6);
-    //     if (index.data() != "⛔️") {
-    //         songList_->model()->setData(index, QString(check ? "✔️" : "❌"));
-    //         musicApi_->songs()[i].showRTranslate = check;
-    //     }
-    // }
-    // showRTranslate = check;
-    // songList_->update();
+    for (int i = 0; i < songList_->model()->rowCount(); ++i) {
+        QModelIndex index = songList_->model()->index(i, 6);
+        if (index.data() != "⛔️") {
+            songList_->model()->setData(index, QString(check ? "✔️" : "❌"));
+            music_->songs()[i].showRTranslate = check;
+        }
+    }
+    showRTranslate = check;
+    songList_->update();
 }

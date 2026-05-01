@@ -5,7 +5,7 @@
 #include <QApplication>
 #include <QScreen>
 
-#include "ElaApplication.h"
+#include <ElaWidgetTools/ElaApplication.h>
 #include "main_window.h"
 #include <Windows.h>
 

@@ -5,9 +5,9 @@
 #include "main_window.h"
 #include "music_window.h"
 
-#include "ElaContentDialog.h"
-#include "ElaEventBus.h"
-#include "ElaTheme.h"
+#include <ElaWidgetTools/ElaContentDialog.h>
+#include <ElaWidgetTools/ElaEventBus.h>
+#include <ElaWidgetTools/ElaTheme.h>
 #include <QApplication>
 #include <QDebug>
 #include <QGraphicsView>
@@ -15,7 +15,7 @@
 #include <QMouseEvent>
 #include <QSettings>
 #ifdef Q_OS_WIN
-#include "ElaApplication.h"
+#include <ElaWidgetTools/ElaApplication.h>
 #include <QTimer>
 #endif
 MainWindow::MainWindow(QWidget* parent)

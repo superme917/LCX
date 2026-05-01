@@ -5,7 +5,7 @@
 #ifndef MAIN_WINDOW_H
 #define MAIN_WINDOW_H
 
-#include "ElaWindow.h"
+#include "ElaWidgetTools/ElaWindow.h"
 
 #include <QMainWindow>
 

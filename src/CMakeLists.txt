@@ -2,12 +2,13 @@
 add_subdirectory(io)
 add_subdirectory(core)
 
-add_executable(${PROJECT_NAME}
+add_executable(${PROJECT_NAME} WIN32
     main.cpp
     main_window.h
     main_window.cpp
     music_window.h
     music_window.cpp
+    resource/app.rc
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -19,5 +20,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 qt_add_resources(${PROJECT_NAME} "LCX"
     RESOURCES PREFIX "/"
     FILES
-    ../resource/liu.jpg
+    resource/liu.jpg
 )

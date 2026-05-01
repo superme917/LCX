@@ -6,14 +6,16 @@
 #define MUSIC_WINDOW_H_
 
 #include <QAbstractTableModel>
-#include <ElaScrollPage.h>
+#include <ElaWidgetTools/ElaScrollPage.h>
+#include <ElaWidgetTools/ElaTableView.h>
 
 class ElaComboBox;
 class ElaLineEdit;
-class ElaTableView;
 class ElaProgressBar;
 class BaseMusic;
 class WordExport;
+class ExportWaitDialog;
+class ElaMenu;
 
 class MusicTableViewModel : public QAbstractTableModel
 {
@@ -34,8 +36,23 @@ public:
 
 private:
     QStringList header_;
-    QList<QStringList> data_list_;
-    QList<QIcon> icon_list_;
+    QList<QStringList> dataList_;
+    QList<QIcon> iconList_;
+};
+
+class MusicTableView : public ElaTableView {
+    Q_OBJECT
+public:
+    explicit MusicTableView(QWidget* parent = nullptr);
+
+protected:
+    void contextMenuEvent(QContextMenuEvent* event) override;
+
+Q_SIGNALS:
+    Q_SIGNAL void translateLyric(bool check);
+    Q_SIGNAL void rTranslateLyric(bool check);
+private:
+    ElaMenu *menu_;
 };
 
 class MusicWindow : public ElaScrollPage
@@ -57,16 +74,20 @@ private slots:
     void onClicked(QModelIndex index);
     void onTranslateLyric(bool check);
     void onRTranslateLyric(bool check);
+    void onExportCanceled();
+    void onExportFinished();
+    void onExportProgress(int total, int current);
+    void onCreatWordFinished();
 
 private:
     ElaComboBox *musicPlatform_{nullptr};
     ElaLineEdit *playlistLink_{nullptr};
-    ElaTableView *songList_{nullptr};
+    MusicTableView *songList_{nullptr};
     MusicTableViewModel *songListModel_{nullptr};
     ElaProgressBar *importProgress_{nullptr};
     ElaText *importProgressText_{nullptr};
     QWidget *centerWidget_{nullptr};
-    // waitPage *waitPage_{nullptr};
+    ExportWaitDialog *exportWaitDialog_{nullptr};
     WordExport *word_export_{nullptr};
 
     BaseMusic *music_{nullptr};

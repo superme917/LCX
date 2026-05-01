@@ -1,3 +1,7 @@
+//
+// Create By WangYiFan on 2026/04/30
+//
+
 #include "io/word_export.h"
 #include "io/word_engine.h"
 #include <QThread>
@@ -6,7 +10,15 @@
 WordExport::WordExport(QObject *parent)
     : QObject{parent}
 {
+}
 
+WordExport::~WordExport()
+{
+    if (workThread_ && workThread_->isRunning()) {
+        cancel();
+        workThread_->quit();
+        workThread_->wait();
+    }
 }
 
 void WordExport::setExportSongs(const QVector<Song> &songs)
@@ -19,26 +31,72 @@ void WordExport::setExportPath(const QString &path)
     path_ = path;
 }
 
+bool WordExport::isRunning() const
+{
+    return isRunning_;
+}
+
+void WordExport::cancel()
+{
+    QMutexLocker locker(&cancelMutex_);
+    isCanceled_ = true;
+}
+
+bool WordExport::checkCanceled()
+{
+    QMutexLocker locker(&cancelMutex_);
+    return isCanceled_;
+}
+
 void WordExport::doWork()
 {
+    isRunning_ = true;
+    workThread_ = new QThread(this);
+    connect(workThread_, &QThread::started, this, &WordExport::doExport);
+    connect(workThread_, &QThread::finished, this, [this]() {
+        isRunning_ = false;
+        workThread_->deleteLater();
+        workThread_ = nullptr;
+    });
+    workThread_->start();
+}
+
+void WordExport::doExport()
+{
+    if (checkCanceled()) {
+        emit exportCanceled();
+        return;
+    }
+
     QWord word;
     if (!word.createNewWord(path_)){
-        qDebug() << "failed";
+        emit exportError("创建Word文档失败");
+        workThread_->quit();
         return;
     }
 
     emit creatWordFinished();
     QApplication::processEvents();
 
-    word.setWordPageView(3);			//页面视图
+    if (checkCanceled()) {
+        emit exportCanceled();
+        return;
+    }
+
+    word.setWordPageView(3);          //页面视图
     word.setFontName(tr("宋体"));
-    word.setParagraphAlignment(0);		//下面文字位置
+    word.setParagraphAlignment(0);    //下面文字位置
 
     int currIdx = 0;
     for (int i = 0; i < songs_.size(); ++i) {
+        if (checkCanceled()) {
+            emit exportCanceled();
+            return;
+        }
+
         currIdx++;
-        word.setFontBold(true);				//字体加粗
-        word.setFontColor("wdColorRed");    //字体颜色
+        word.setFontBold(true);               //字体加粗
+        word.setFontColor("wdColorRed");       //字体颜色
         word.setFontSize(16);
         word.insertText(songs_[i].lyric[0]);
         word.setFontBold(false);
@@ -58,10 +116,16 @@ void WordExport::doWork()
             }
         }
         word.skidPage();
+
         emit exportProgress(songs_.size(), currIdx);
         QApplication::processEvents();
-        qDebug() << i << ", " << songs_[i].lyric[0];
     }
+
+    if (checkCanceled()) {
+        emit exportCanceled();
+        return;
+    }
+
     emit exportFinished();
     QApplication::processEvents(QEventLoop::AllEvents, 1000);
     word.setVisible(true);
