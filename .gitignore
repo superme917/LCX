@@ -60,3 +60,4 @@ compile_commands.json
 # 保留d3party下的所有文件
 !d3party/**
 .vscode/
+.qtcreator/
