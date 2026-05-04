@@ -2,17 +2,17 @@
 // Create By WangYiFan on 2026/05/01
 //
 
-#ifndef EXPORT_WAIT_DIALOG_H
-#define EXPORT_WAIT_DIALOG_H
+#pragma once
 
-#include <QDialog>
 #include <ElaWidgetTools/ElaDialog.h>
 #include <ElaWidgetTools/ElaProgressBar.h>
 #include <ElaWidgetTools/ElaPushButton.h>
 #include <ElaWidgetTools/ElaText.h>
+#include <QDialog>
 
-class ExportWaitDialog : public ElaDialog
-{
+namespace LCX {
+
+class ExportWaitDialog : public ElaDialog {
     Q_OBJECT
 public:
     explicit ExportWaitDialog(QWidget* parent = nullptr);
@@ -37,4 +37,4 @@ private:
     ElaPushButton* cancelButton_{nullptr};
 };
 
-#endif // EXPORT_WAIT_DIALOG_H
+}  // namespace LCX

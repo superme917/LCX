@@ -3,12 +3,13 @@
 //
 
 #include "export_wait_dialog.h"
-#include <QVBoxLayout>
-#include <QHBoxLayout>
 
-ExportWaitDialog::ExportWaitDialog(QWidget* parent)
-    : ElaDialog(parent)
-{
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+
+namespace LCX {
+
+ExportWaitDialog::ExportWaitDialog(QWidget* parent) : ElaDialog(parent) {
     initDialog();
     setWindowButtonFlags(ElaAppBarType::CloseButtonHint);
     setWindowTitle("正在导出");
@@ -17,17 +18,14 @@ ExportWaitDialog::ExportWaitDialog(QWidget* parent)
     setModal(true);
 }
 
-ExportWaitDialog::~ExportWaitDialog()
-{
-}
+ExportWaitDialog::~ExportWaitDialog() {}
 
-void ExportWaitDialog::initDialog()
-{
+void ExportWaitDialog::initDialog() {
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(20, 20, 20, 20);
 
     // 状态文本
-    statusText_ = new ElaText("正在创建Word文档...", this);
+    statusText_ = new ElaText("正在导出歌词...", this);
     statusText_->setTextPixelSize(14);
 
     // 进度条
@@ -58,26 +56,20 @@ void ExportWaitDialog::initDialog()
     mainLayout->addLayout(buttonLayout);
 }
 
-void ExportWaitDialog::setProgress(int total, int current)
-{
+void ExportWaitDialog::setProgress(int total, int current) {
     if (total > 0) {
         progressBar_->setValue(current);
         progressText_->setText(QString("%1 / %2").arg(current).arg(total));
     }
 }
 
-void ExportWaitDialog::setMaxTotal(int total)
-{
-    progressBar_->setMaximum(total);
-}
+void ExportWaitDialog::setMaxTotal(int total) { progressBar_->setMaximum(total); }
 
-void ExportWaitDialog::setStatusText(const QString& text)
-{
-    statusText_->setText(text);
-}
+void ExportWaitDialog::setStatusText(const QString& text) { statusText_->setText(text); }
 
-void ExportWaitDialog::onCancelClicked()
-{
+void ExportWaitDialog::onCancelClicked() {
     emit cancelRequested();
     reject();
 }
+
+}  // namespace LCX

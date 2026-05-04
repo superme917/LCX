@@ -2,18 +2,16 @@
 // Create By WangYiFan on 2026/04/30
 //
 
-#ifndef MAIN_WINDOW_H
-#define MAIN_WINDOW_H
+#pragma once
 
 #include "ElaWidgetTools/ElaWindow.h"
-
-#include <QMainWindow>
+#include "music_window.h"
 
 class ElaContentDialog;
-class MusicWindow;
 
-class MainWindow : public ElaWindow
-{
+namespace LCX {
+
+class MainWindow : public ElaWindow {
     Q_OBJECT
 
 public:
@@ -29,4 +27,5 @@ private:
     ElaContentDialog* close_dialog_ = nullptr;
     MusicWindow* music_window_ = nullptr;
 };
-#endif // MAIN_WINDOW_H
+
+}  // namespace LCX

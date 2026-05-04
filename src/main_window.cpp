@@ -5,6 +5,7 @@
 #include "main_window.h"
 #include "music_window.h"
 
+#include <ElaWidgetTools/ElaApplication.h>
 #include <ElaWidgetTools/ElaContentDialog.h>
 #include <ElaWidgetTools/ElaEventBus.h>
 #include <ElaWidgetTools/ElaTheme.h>
@@ -14,13 +15,11 @@
 #include <QHBoxLayout>
 #include <QMouseEvent>
 #include <QSettings>
-#ifdef Q_OS_WIN
-#include <ElaWidgetTools/ElaApplication.h>
-#include <QTimer>
-#endif
-MainWindow::MainWindow(QWidget* parent)
-    : ElaWindow(parent)
-{
+
+
+namespace LCX {
+
+MainWindow::MainWindow(QWidget *parent) : ElaWindow(parent) {
     initWindow();
 
     //额外布局
@@ -43,20 +42,15 @@ MainWindow::MainWindow(QWidget* parent)
         showMinimized();
     });
     this->setIsDefaultClosed(false);
-    connect(this, &MainWindow::closeButtonClicked, this, [=]() {
-        close_dialog_->exec();
-    });
+    connect(this, &MainWindow::closeButtonClicked, this, [=]() { close_dialog_->exec(); });
 
     //移动到中心
     moveToCenter();
 }
 
-MainWindow::~MainWindow()
-{
-}
+MainWindow::~MainWindow() {}
 
-void MainWindow::initWindow()
-{
+void MainWindow::initWindow() {
     setFocusPolicy(Qt::StrongFocus);
     resize(1200, 740);
     setUserInfoCardPixmap(QPixmap(":/resource/liu.jpg"));
@@ -64,24 +58,23 @@ void MainWindow::initWindow()
     setUserInfoCardSubTitle("💐🌸🌷🍀🌹🌻🌺");
 }
 
-void MainWindow::initEdgeLayout()
-{
-}
+void MainWindow::initEdgeLayout() {}
 
-void MainWindow::initContent()
-{
+void MainWindow::initContent() {
     music_window_ = new MusicWindow(this);
     addPageNode("HOME", music_window_, ElaIconType::Music);
     qDebug() << "已注册的事件列表" << ElaEventBus::getInstance()->getRegisteredEventsName();
 }
 
-void MainWindow::initSetting()
-{
+void MainWindow::initSetting() {
     QSettings setting(QApplication::applicationDirPath() + "/settings.ini", QSettings::Format::IniFormat);
-    eTheme->setThemeMode(setting.value("Theme", "Light").toString() == "Light" ? ElaThemeType::ThemeMode::Light : ElaThemeType::ThemeMode::Dark);
+    eTheme->setThemeMode(setting.value("Theme", "Light").toString() == "Light" ? ElaThemeType::ThemeMode::Light
+                                                                               : ElaThemeType::ThemeMode::Dark);
     QString DisplayModeArea = setting.value("DisplayModeArea", "Auto").toString();
-    setNavigationBarDisplayMode(DisplayModeArea == "Auto" ? ElaNavigationType::NavigationDisplayMode::Auto :
-                                    DisplayModeArea == "Compact" ? ElaNavigationType::NavigationDisplayMode::Compact :
-                                    DisplayModeArea == "Maximal" ? ElaNavigationType::NavigationDisplayMode::Maximal :
-                                    ElaNavigationType::NavigationDisplayMode::Minimal);
+    setNavigationBarDisplayMode(DisplayModeArea == "Auto"      ? ElaNavigationType::NavigationDisplayMode::Auto
+                                : DisplayModeArea == "Compact" ? ElaNavigationType::NavigationDisplayMode::Compact
+                                : DisplayModeArea == "Maximal" ? ElaNavigationType::NavigationDisplayMode::Maximal
+                                                               : ElaNavigationType::NavigationDisplayMode::Minimal);
 }
+
+}  // namespace LCX

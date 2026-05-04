@@ -8,6 +8,8 @@ add_executable(${PROJECT_NAME} WIN32
     main_window.cpp
     music_window.h
     music_window.cpp
+    export_wait_dialog.h
+    export_wait_dialog.cpp
     resource/app.rc
 )
 

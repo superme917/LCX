@@ -2,24 +2,28 @@
 // Create By WangYiFan on 2026/05/01
 //
 
-#ifndef CLOUD_MUSIC_H
-#define CLOUD_MUSIC_H
+#pragma once
 
 #include "core/base_music.h"
+
 #include <QCloudMusicApi/module.h>
 
-class CloudMusic : public BaseMusic
-{
-    Q_OBJECT
-public:
-    CloudMusic(QWidget *parent = nullptr);
-    ~CloudMusic() = default;
+namespace LCX::core {
 
-    virtual bool checkMusicLink(QString musicLink) override;
-    virtual void importMusic() override;
+// 网易云音乐解析接口
+class CloudMusic : public BaseMusic {
+    Q_OBJECT
+
+public:
+    // 构造函数
+    CloudMusic(QWidget *parent = nullptr);
+    // 析构函数
+    ~CloudMusic();
+    // 解析歌单链接，获取歌词
+    virtual void importMusic(const QString &playlist_link) override;
 
 private:
     NeteaseCloudMusicApi *cloud_music_;
 };
 
-#endif // CLOUD_MUSIC_H
+}  // namespace LCX::core

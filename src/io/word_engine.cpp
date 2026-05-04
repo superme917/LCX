@@ -1,412 +1,343 @@
-#include "word_engine.h"
-#include <QDateTime>
-#include <QFileDialog>
-#include <QFile>
-#include <QTextStream>
+#include "io/word_engine.h"
+
+#include <Windows.h>
+#include <ActiveQt/QAxBase>
 #include <ActiveQt/QAxObject>
 #include <ActiveQt/QAxWidget>
-#include <QTextStream>
-#include <ActiveQt/QAxBase>
+#include <QDateTime>
+#include <QFile>
+#include <QFileDialog>
 #include <QTextFormat>
-#include <Windows.h>
+#include <QTextStream>
 
-QWord::QWord(QObject *parent)
-{
-    CoInitializeEx(NULL, COINIT_MULTITHREADED);//解决非主线程无法调用word问题
+namespace LCX::io {
+
+QWord::QWord(QObject* parent) {
+    CoInitializeEx(NULL, COINIT_MULTITHREADED);  //解决非主线程无法调用word问题
     m_word = new QAxObject(parent);
     m_documents = NULL;
     m_document = NULL;
-    m_bOpened=false;
+    m_bOpened = false;
 }
 
-QWord::~QWord()
-{
-    close();
-}
+QWord::~QWord() { close(); }
 
-bool QWord::createWord(QString reportname)		//创建一个新的word
+bool QWord::createWord(QString reportname)  //创建一个新的word
 {
-    QString ReportName= reportname;
+    QString ReportName = reportname;
     QString defaultFileName = QString("%1").arg(ReportName);
-    m_saveName=QFileDialog::getSaveFileName(0,tr("Report Information"),defaultFileName,tr("*.doc"));
-    //CGlobalAppData *pAppData = CAppDataSingleton::instance();
-    QString SavePath = /*pAppData->m_strAppDirPath + */"/ReportWord"+m_saveName;
+    m_saveName = QFileDialog::getSaveFileName(0, tr("Report Information"), defaultFileName, tr("*.doc"));
+    // CGlobalAppData *pAppData = CAppDataSingleton::instance();
+    QString SavePath = /*pAppData->m_strAppDirPath + */ "/ReportWord" + m_saveName;
     QFile file(m_saveName);
-    if(file.exists())
-    {
+    if (file.exists()) {
         m_strError = tr("abnormal:the file already exists!");
-        //m_strError = QString::fromLocal8Bit("错误：目标文件已存在!");
+        // m_strError = QString::fromLocal8Bit("错误：目标文件已存在!");
         return false;
     }
-    if(!m_saveName.isEmpty())
-    {
-        if(!m_word->setControl("Word.Application"))
-        {
+    if (!m_saveName.isEmpty()) {
+        if (!m_word->setControl("Word.Application")) {
             m_strError = tr("abnormal:failed to get the word component,please make sure the word is installed!");
-            //m_strError = QString::fromLocal8Bit("错误：获取word组件失败，请确定是否安装了word!");
+            // m_strError = QString::fromLocal8Bit("错误：获取word组件失败，请确定是否安装了word!");
             return false;
         }
-        m_word->setProperty("Visible",false);
-        m_word->setProperty("DisplayAlerts", false);//不显示任何警告信息。如果为true那么在关闭是会出现类似“文件已修改，是否保存”的提示
+        m_word->setProperty("Visible", false);
+        m_word->setProperty("DisplayAlerts",
+                            false);  //不显示任何警告信息。如果为true那么在关闭是会出现类似“文件已修改，是否保存”的提示
         m_documents = m_word->querySubObject("Documents");
         m_documents->dynamicCall("Add (void)");
-        m_document = m_word->querySubObject("ActiveDocument");//获取当前激活的文档
+        m_document = m_word->querySubObject("ActiveDocument");  //获取当前激活的文档
         return true;
-    }else
-    {
+    } else {
         m_strError = tr("abnormal:the file name is empty!");
-        //m_strError = QString::fromLocal8Bit("错误：文件名为空");
+        // m_strError = QString::fromLocal8Bit("错误：文件名为空");
         return false;
     }
 }
-bool QWord::createNewWord(const QString& filePath )
-{
+bool QWord::createNewWord(const QString& filePath) {
     m_saveName = filePath;
     QFile file(m_saveName);
-    if(file.exists())
-    {
+    if (file.exists()) {
         file.remove(m_saveName);
-        //m_strError = tr("error:the file already exists!");
-        //m_strError = QString::fromLocal8Bit("错误：目标文件已存在!");
-        //return false;
+        // m_strError = tr("error:the file already exists!");
+        // m_strError = QString::fromLocal8Bit("错误：目标文件已存在!");
+        // return false;
     }
-    if(!m_saveName.isEmpty())
-    {
-        if(!m_word->setControl("Word.Application"))
-        {
+    if (!m_saveName.isEmpty()) {
+        if (!m_word->setControl("Word.Application")) {
             m_strError = tr("abnormal:failed to get the word component,please make sure the word is installed!");
-            //m_strError = QString::fromLocal8Bit("错误：获取word组件失败，请确定是否安装了word!\n");
+            // m_strError = QString::fromLocal8Bit("错误：获取word组件失败，请确定是否安装了word!\n");
             return false;
         }
-        m_word->setProperty("Visible",false);
-        m_word->setProperty("DisplayAlerts", false);//不显示任何警告信息。如果为true那么在关闭是会出现类似“文件已修改，是否保存”的提示
+        m_word->setProperty("Visible", false);
+        m_word->setProperty("DisplayAlerts",
+                            false);  //不显示任何警告信息。如果为true那么在关闭是会出现类似“文件已修改，是否保存”的提示
         m_documents = m_word->querySubObject("Documents");
-        if(!m_documents)
-        {
+        if (!m_documents) {
             m_strError = tr("abnormal:failed to get the documents!");
-            //m_strError = QString::fromLocal8Bit("获取文档失败！\n");
+            // m_strError = QString::fromLocal8Bit("获取文档失败！\n");
             return false;
         }
         m_documents->dynamicCall("Add (void)");
-        m_document = m_word->querySubObject("ActiveDocument");//获取当前激活的文档
+        m_document = m_word->querySubObject("ActiveDocument");  //获取当前激活的文档
         return true;
-    }else
-    {
+    } else {
         m_strError = tr("abnormal:the file name is empty!");
-        //m_strError = QString::fromLocal8Bit("错误：文件名为空");
+        // m_strError = QString::fromLocal8Bit("错误：文件名为空");
         return false;
     }
 }
-bool QWord::openword(bool bVisable)
-{
+bool QWord::openword(bool bVisable) {
     m_word = new QAxObject();
     bool bFlag = m_word->setControl("word.Application");
-    if(!bFlag)
-    {
+    if (!bFlag) {
         bFlag = m_word->setControl("kwps.Application");
     }
-    if(!bFlag)
-    {
+    if (!bFlag) {
         return false;
     }
-    m_word->setProperty("Visible",bVisable);
-    QAxObject* documents =m_word->querySubObject("Documents");
-    if(!documents)
-    {
+    m_word->setProperty("Visible", bVisable);
+    QAxObject* documents = m_word->querySubObject("Documents");
+    if (!documents) {
         return false;
     }
-    documents->dynamicCall("Add(QString)",m_strFilePath);
+    documents->dynamicCall("Add(QString)", m_strFilePath);
     m_bOpened = true;
     return m_bOpened;
 }
 
-bool QWord::open(const QString& strFilePath,bool bVisable)
-{
+bool QWord::open(const QString& strFilePath, bool bVisable) {
     m_strFilePath = strFilePath;
-    //close();
+    // close();
     return openword(bVisable);
 }
-bool QWord::isOpen()
-{
-    return m_bOpened;
-}
-void QWord::save()
-{
-    if(m_document)
-        m_document->dynamicCall("Save()");
+bool QWord::isOpen() { return m_bOpened; }
+void QWord::save() {
+    if (m_document) m_document->dynamicCall("Save()");
     else
         return;
 }
-void QWord::close()				//关闭 退出 析构时候也会自动调用一次
+void QWord::close()  //关闭 退出 析构时候也会自动调用一次
 {
-    if(!m_saveName.isEmpty())		//如果不为空  则为新建
+    if (!m_saveName.isEmpty())  //如果不为空  则为新建
     {
         saveAs();
         m_saveName = "";
     }
-    //if(m_document)
+    // if(m_document)
     //	m_document->dynamicCall("Close (boolean)",false);
-    //if(m_word)
+    // if(m_word)
     //	m_word->dynamicCall("Quit (void)");
-    if(m_documents)
-        delete m_documents;
-    if(m_word)
-        delete m_word;
+    if (m_documents) delete m_documents;
+    if (m_word) delete m_word;
     m_document = NULL;
     m_documents = NULL;
     m_word = NULL;
 }
-void QWord::saveAs()
-{
-    if(m_document)
-        m_document->dynamicCall("SaveAs(const QString&)",QDir::toNativeSeparators(m_saveName));
+void QWord::saveAs() {
+    if (m_document) m_document->dynamicCall("SaveAs(const QString&)", QDir::toNativeSeparators(m_saveName));
     else
         return;
 }
 
-void QWord::setPageOrientation(int flag)	//设置页面1 横向   还是 0竖向
+void QWord::setPageOrientation(int flag)  //设置页面1 横向   还是 0竖向
 {
     QAxObject* selection = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+    if (nullptr == selection) {
         return;
     }
     QString page;
-    switch (flag)
-    {
-    case 0:
-        page = "wdOrientPortrait";
-        break;
-    case 1:
-        page = "wdOrientLandscape";
-        break;
+    switch (flag) {
+        case 0:
+            page = "wdOrientPortrait";
+            break;
+        case 1:
+            page = "wdOrientLandscape";
+            break;
     }
-    selection->querySubObject("PageSetUp")->setProperty("Orientation",page);
+    selection->querySubObject("PageSetUp")->setProperty("Orientation", page);
 }
-void QWord::setWordPageView(int flag)
-{
+void QWord::setWordPageView(int flag) {
     QAxObject* viewPage = m_word->querySubObject("ActiveWindow");
-    if(nullptr== viewPage)
-    {
+    if (nullptr == viewPage) {
         return;
     }
     QString view;
-    switch (flag)
-    {
-    case 1:
-        view = "wdNormalView";
-        break;
-    case 2:
-        view = "wdOutlineView";
-        break;
-    case 3:
-        view = "wdPrintView";
-        break;
-    case 4:
-        view = "wdPrintPreview";
-        break;
-    case 5:
-        view = "wdMasterView";
-        break;
-    case 6:
-        view = "wdWebView";
-        break;
-    case 7:
-        view = "wdReadingView";
-        break;
-    case 8:
-        view = "wdConflictView";
-        break;
+    switch (flag) {
+        case 1:
+            view = "wdNormalView";
+            break;
+        case 2:
+            view = "wdOutlineView";
+            break;
+        case 3:
+            view = "wdPrintView";
+            break;
+        case 4:
+            view = "wdPrintPreview";
+            break;
+        case 5:
+            view = "wdMasterView";
+            break;
+        case 6:
+            view = "wdWebView";
+            break;
+        case 7:
+            view = "wdReadingView";
+            break;
+        case 8:
+            view = "wdConflictView";
+            break;
     }
-    viewPage->querySubObject("View")->setProperty("Type",view);
+    viewPage->querySubObject("View")->setProperty("Type", view);
 }
-void QWord::insertMoveDown()				//插入回车
+void QWord::insertMoveDown()  //插入回车
 {
-    QAxObject* selection  = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+    QAxObject* selection = m_word->querySubObject("Selection");
+    if (nullptr == selection) {
         return;
     }
     selection->dynamicCall("TypeParagraph(void)");
 }
-void QWord::insertText(const QString& text)
-{
-    QAxObject* selection  = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+void QWord::insertText(const QString& text) {
+    QAxObject* selection = m_word->querySubObject("Selection");
+    if (nullptr == selection) {
         return;
     }
-    selection->dynamicCall("TypeText(const QString&)",text);
+    selection->dynamicCall("TypeText(const QString&)", text);
 }
 
-QString QWord::GetText()
-{
+QString QWord::GetText() {
     QAxObject* selection = m_word->querySubObject("Selection");
     QString str;
-    if(nullptr!= selection)
-    {
+    if (nullptr != selection) {
         str = selection->dynamicCall("GetText(void)").toString();
     }
 
     return str;
 }
 //设置选中位置文字居中 0 ,居左 1,居右 2
-void QWord::setParagraphAlignment(int flag)
-{
+void QWord::setParagraphAlignment(int flag) {
     QAxObject* selection = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+    if (nullptr == selection) {
         return;
     }
-    if(flag == 0)
-    {
-        selection->querySubObject("ParagraphFormat")->setProperty("Alignment","wdAlignParagraphCenter");
-    }else if(flag == 1)
-    {
-        selection->querySubObject("ParagraphFormat")->setProperty("Alignment","wdAlignParagraphJustify");
-    }else if(flag == 2)
-    {
-        selection->querySubObject("ParagraphFormat")->setProperty("Alignment","wdAlignParagraphRight");
+    if (flag == 0) {
+        selection->querySubObject("ParagraphFormat")->setProperty("Alignment", "wdAlignParagraphCenter");
+    } else if (flag == 1) {
+        selection->querySubObject("ParagraphFormat")->setProperty("Alignment", "wdAlignParagraphJustify");
+    } else if (flag == 2) {
+        selection->querySubObject("ParagraphFormat")->setProperty("Alignment", "wdAlignParagraphRight");
     }
 }
 
-void QWord::setRowAlignment(int tableIndex,int row,int flag)
-{
+void QWord::setRowAlignment(int tableIndex, int row, int flag) {
     QAxObject* tables = m_document->querySubObject("Tables");
-    if(nullptr== tables)
-    {
+    if (nullptr == tables) {
         return;
     }
-    QAxObject* table = tables->querySubObject("Item(int)",tableIndex);
-    if(nullptr== table )
-    {
+    QAxObject* table = tables->querySubObject("Item(int)", tableIndex);
+    if (nullptr == table) {
         return;
     }
-    QAxObject* Row= table->querySubObject("Rows(int)",row);
-    if(nullptr== Row)
-    {
+    QAxObject* Row = table->querySubObject("Rows(int)", row);
+    if (nullptr == Row) {
         return;
     }
     QAxObject* range = Row->querySubObject("Range");
-    if(nullptr== range)
-    {
+    if (nullptr == range) {
         return;
     }
-    Row->querySubObject("Alignment(int)",flag);
-    if(flag == 0)
-    {
-        range->querySubObject("ParagraphFormat")->setProperty("Alignment","wdAlignParagraphCenter");
-    }else if(flag == 1)
-    {
-        range->querySubObject("ParagraphFormat")->setProperty("Alignment","wdAlignParagraphJustify");
-    }else if(flag == 2)
-    {
-        range->querySubObject("ParagraphFormat")->setProperty("Alignment","wdAlignParagraphRight");
-    }else if(flag ==3)
-    {
-        range->querySubObject("ParagraphFormat")->setProperty("Alignment","wdAlignParagraphLeft");
+    Row->querySubObject("Alignment(int)", flag);
+    if (flag == 0) {
+        range->querySubObject("ParagraphFormat")->setProperty("Alignment", "wdAlignParagraphCenter");
+    } else if (flag == 1) {
+        range->querySubObject("ParagraphFormat")->setProperty("Alignment", "wdAlignParagraphJustify");
+    } else if (flag == 2) {
+        range->querySubObject("ParagraphFormat")->setProperty("Alignment", "wdAlignParagraphRight");
+    } else if (flag == 3) {
+        range->querySubObject("ParagraphFormat")->setProperty("Alignment", "wdAlignParagraphLeft");
     }
 }
-void QWord::setFontSize(int fontsize)		//设置字体大小
+void QWord::setFontSize(int fontsize)  //设置字体大小
 {
     QAxObject* selection = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+    if (nullptr == selection) {
         return;
     }
-    selection->querySubObject("Font")->setProperty("Size",fontsize);
+    selection->querySubObject("Font")->setProperty("Size", fontsize);
 }
-void QWord::setFontBold(bool flag)
-{
+void QWord::setFontBold(bool flag) {
     QAxObject* selection = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+    if (nullptr == selection) {
         return;
     }
-    selection->querySubObject("Font")->setProperty("Bold",flag);
+    selection->querySubObject("Font")->setProperty("Bold", flag);
 }
 
-void QWord::setFontColor(QString color)
-{
+void QWord::setFontColor(QString color) {
     QAxObject* selection = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+    if (nullptr == selection) {
         return;
     }
-    selection->querySubObject("Font")->setProperty("Color",color);
+    selection->querySubObject("Font")->setProperty("Color", color);
 }
-void QWord::setFontName(QString fontName)
-{
+void QWord::setFontName(QString fontName) {
     QAxObject* selection = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+    if (nullptr == selection) {
         return;
     }
-    selection->querySubObject("Font")->setProperty("Name",fontName);
+    selection->querySubObject("Font")->setProperty("Name", fontName);
 }
-void QWord::setSelectionRange(int start,int end)
-{
+void QWord::setSelectionRange(int start, int end) {
     QAxObject* selection = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+    if (nullptr == selection) {
         return;
     }
-    selection->dynamicCall("SetRange(int, int)", start,end);	//第1个字符后开始，到第9个字符结束范围
+    selection->dynamicCall("SetRange(int, int)", start, end);  //第1个字符后开始，到第9个字符结束范围
 }
-void QWord::getUsedRange(int *topLeftRow, int *topLeftColumn, int *bottomRightRow, int *bottomRightColumn)
-{
+void QWord::getUsedRange(int* topLeftRow, int* topLeftColumn, int* bottomRightRow, int* bottomRightColumn) {
     QAxObject* range = m_document->querySubObject("Range");
-    if(nullptr== range)
-    {
+    if (nullptr == range) {
         return;
     }
     *topLeftRow = range->property("Row").toInt();
-    if(nullptr== topLeftRow)
-    {
+    if (nullptr == topLeftRow) {
         return;
     }
     *topLeftColumn = range->property("Column").toInt();
-    if(nullptr== topLeftColumn)
-    {
+    if (nullptr == topLeftColumn) {
         return;
     }
-    QAxObject *rows = range->querySubObject("Rows");
-    if(nullptr== rows)
-    {
+    QAxObject* rows = range->querySubObject("Rows");
+    if (nullptr == rows) {
         return;
     }
     *bottomRightRow = *topLeftRow + rows->property("Count").toInt() - 1;
-    if(nullptr== bottomRightRow)
-    {
+    if (nullptr == bottomRightRow) {
         return;
     }
-    QAxObject *columns = range->querySubObject("Columns");
-    if(nullptr== columns)
-    {
+    QAxObject* columns = range->querySubObject("Columns");
+    if (nullptr == columns) {
         return;
     }
     *bottomRightColumn = *topLeftColumn + columns->property("Count").toInt() - 1;
-    if(nullptr== bottomRightColumn)
-    {
+    if (nullptr == bottomRightColumn) {
         return;
     }
 }
 
-void QWord::intsertTable(int row,int column)
-{
+void QWord::intsertTable(int row, int column) {
     QAxObject* tables = m_document->querySubObject("Tables");
-    if(nullptr== tables)
-    {
+    if (nullptr == tables) {
         return;
     }
     QAxObject* selection = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+    if (nullptr == selection) {
         return;
     }
     QAxObject* range = selection->querySubObject("Range");
-    if(nullptr== range)
-    {
+    if (nullptr == range) {
         return;
     }
     QVariantList params;
@@ -414,40 +345,34 @@ void QWord::intsertTable(int row,int column)
     params.append(row);
     params.append(column);
     tables->querySubObject("Add(QAxObject*, int, int, QVariant&, QVariant&)", params);
-    QAxObject* table = selection->querySubObject("Tables(int)",1);
-    if(nullptr== table)
-    {
+    QAxObject* table = selection->querySubObject("Tables(int)", 1);
+    if (nullptr == table) {
         return;
     }
-    table->setProperty("Style","网格型");
+    table->setProperty("Style", "网格型");
     QAxObject* Borders = table->querySubObject("Borders");
-    if(nullptr== Borders)
-    {
+    if (nullptr == Borders) {
         return;
     }
-    Borders->setProperty("InsideLineStyle",1);
-    Borders->setProperty("OutsideLineStyle",1);
+    Borders->setProperty("InsideLineStyle", 1);
+    Borders->setProperty("OutsideLineStyle", 1);
     /*QString doc = Borders->generateDocumentation();
     QFile outFile("D:\\360Downloads\\Picutres\\Borders.html");
     outFile.open(QIODevice::WriteOnly|QIODevice::Append);
     QTextStream ts(&outFile);
     ts<<doc<<endl;*/
 }
-void QWord::intsertTable(int tableIndex, int row,int column)
-{
+void QWord::intsertTable(int tableIndex, int row, int column) {
     QAxObject* tables = m_document->querySubObject("Tables");
-    if(nullptr== tables)
-    {
+    if (nullptr == tables) {
         return;
     }
     QAxObject* selection = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+    if (nullptr == selection) {
         return;
     }
     QAxObject* range = selection->querySubObject("Range");
-    if(nullptr== range)
-    {
+    if (nullptr == range) {
         return;
     }
     QVariantList params;
@@ -455,19 +380,17 @@ void QWord::intsertTable(int tableIndex, int row,int column)
     params.append(row);
     params.append(column);
     tables->querySubObject("Add(QAxObject*, int, int, QVariant&, QVariant&)", params);
-    QAxObject* table = selection->querySubObject("Tables(int)",tableIndex);
-    if(nullptr== table)
-    {
+    QAxObject* table = selection->querySubObject("Tables(int)", tableIndex);
+    if (nullptr == table) {
         return;
     }
-    table->setProperty("Style","网格型");
+    table->setProperty("Style", "网格型");
     QAxObject* Borders = table->querySubObject("Borders");
-    if(nullptr== Borders)
-    {
+    if (nullptr == Borders) {
         return;
     }
-    Borders->setProperty("InsideLineStyle",1);
-    Borders->setProperty("OutsideLineStyle",1);
+    Borders->setProperty("InsideLineStyle", 1);
+    Borders->setProperty("OutsideLineStyle", 1);
     /*QString doc = Borders->generateDocumentation();
     QFile outFile("D:\\360Downloads\\Picutres\\Borders.html");
     outFile.open(QIODevice::WriteOnly|QIODevice::Append);
@@ -475,62 +398,51 @@ void QWord::intsertTable(int tableIndex, int row,int column)
     ts<<doc<<endl;*/
 }
 
-void QWord::setColumnWidth(int column, int width)		//设置列宽
+void QWord::setColumnWidth(int column, int width)  //设置列宽
 {
     QAxObject* selection = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+    if (nullptr == selection) {
         return;
     }
     QAxObject* table = selection->querySubObject("Tables(1)");
-    if(nullptr== table)
-    {
+    if (nullptr == table) {
         return;
     }
-    table->querySubObject("Columns(int)",column)->setProperty("Width",width);
-
+    table->querySubObject("Columns(int)", column)->setProperty("Width", width);
 }
-void QWord::setCellString(int nTable,int row,int column,const QString& text)
-{
-    QAxObject* pTables =m_document->querySubObject("Tables");
-    if(nullptr==pTables)
-    {
+void QWord::setCellString(int nTable, int row, int column, const QString& text) {
+    QAxObject* pTables = m_document->querySubObject("Tables");
+    if (nullptr == pTables) {
         return;
     }
-    QAxObject* table=pTables->querySubObject("Item(int)",nTable);
-    if(table)
-    {
-        table->querySubObject("Cell(int,int)",row,column)->querySubObject("Range")
-            ->dynamicCall("SetText(QString)",text);
+    QAxObject* table = pTables->querySubObject("Item(int)", nTable);
+    if (table) {
+        table->querySubObject("Cell(int,int)", row, column)
+            ->querySubObject("Range")
+            ->dynamicCall("SetText(QString)", text);
     }
 }
-void QWord::MergeCells(int tableIndex, int nStartRow,int nStartCol,int nEndRow,int nEndCol)//合并单元格
+void QWord::MergeCells(int tableIndex, int nStartRow, int nStartCol, int nEndRow, int nEndCol)  //合并单元格
 {
     QAxObject* tables = m_document->querySubObject("Tables");
-    if(nullptr==tables)
-    {
+    if (nullptr == tables) {
         return;
     }
-    QAxObject* table = tables->querySubObject("Item(int)",tableIndex);
-    if(nullptr== table)
-    {
+    QAxObject* table = tables->querySubObject("Item(int)", tableIndex);
+    if (nullptr == table) {
         return;
     }
-    if(table)
-    {
-        QAxObject* StartCell =table->querySubObject("Cell(int, int)",nStartRow,nStartCol);
-        QAxObject* EndCell = table->querySubObject("Cell(int, int)",nEndRow,nEndCol);
-        if(nullptr==StartCell)
-        {
+    if (table) {
+        QAxObject* StartCell = table->querySubObject("Cell(int, int)", nStartRow, nStartCol);
+        QAxObject* EndCell = table->querySubObject("Cell(int, int)", nEndRow, nEndCol);
+        if (nullptr == StartCell) {
             return;
         }
-        if(nullptr== EndCell)
-        {
+        if (nullptr == EndCell) {
             return;
         }
-        StartCell->querySubObject("Merge(QAxObject *)",EndCell->asVariant());
+        StartCell->querySubObject("Merge(QAxObject *)", EndCell->asVariant());
     }
-
 }
 //第二种方法调用
 // void QWord::MergeCells(int tableIndex, int nStartRow,int nStartCol,int nEndRow,int nEndCol)//合并单元格
@@ -542,122 +454,105 @@ void QWord::MergeCells(int tableIndex, int nStartRow,int nStartCol,int nEndRow,i
 // 	StartCell->dynamicCall("Merge(LPDISPATCH)",EndCell->asVariant());
 // }
 
-void QWord::setColumnHeight(int nTable,int column, int height)
-{
-    QAxObject* pTables =m_document->querySubObject("Tables");
-    if(nullptr==pTables)
-    {
+void QWord::setColumnHeight(int nTable, int column, int height) {
+    QAxObject* pTables = m_document->querySubObject("Tables");
+    if (nullptr == pTables) {
         return;
     }
-    QAxObject* table=pTables->querySubObject("Item(int)",nTable);
-    if(table)
-    {
-        table->querySubObject("Columns(int)",column)->setProperty("Hight",height);
+    QAxObject* table = pTables->querySubObject("Item(int)", nTable);
+    if (table) {
+        table->querySubObject("Columns(int)", column)->setProperty("Hight", height);
     }
 }
-void QWord::setRowHeight(int nTable,int Row, int height)
-{
-    QAxObject* pTables =m_document->querySubObject("Tables");
-    if(nullptr==pTables)
-    {
+void QWord::setRowHeight(int nTable, int Row, int height) {
+    QAxObject* pTables = m_document->querySubObject("Tables");
+    if (nullptr == pTables) {
         return;
     }
-    QAxObject* table=pTables->querySubObject("Item(int)",nTable);
+    QAxObject* table = pTables->querySubObject("Item(int)", nTable);
 
-    if(table)
-    {
-        table->querySubObject("Rows(int)",Row)->setProperty("Hight",height);
+    if (table) {
+        table->querySubObject("Rows(int)", Row)->setProperty("Hight", height);
     }
 }
 
-void QWord::setColumnHeight(int column, int height)		//设置列高
+void QWord::setColumnHeight(int column, int height)  //设置列高
 {
     QAxObject* selection = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+    if (nullptr == selection) {
         return;
     }
     QAxObject* table = selection->querySubObject("Tables(1)");
-    if(table)
-    {
-        table->querySubObject("Columns(int)",column)->setProperty("Hight",height);
+    if (table) {
+        table->querySubObject("Columns(int)", column)->setProperty("Hight", height);
     }
-
 }
 
-
-void QWord::setCellString(int row, int column, const QString& text)
-{
+void QWord::setCellString(int row, int column, const QString& text) {
     QAxObject* selection = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+    if (nullptr == selection) {
         return;
     }
     QAxObject* table = selection->querySubObject("Tables(1)");
-    if(nullptr== table)
-    {
+    if (nullptr == table) {
         return;
     }
-    QAxObject* rows =table->querySubObject("Rows");
-    if(rows)
-    {
+    QAxObject* rows = table->querySubObject("Rows");
+    if (rows) {
         return;
     }
-    int Count =rows->dynamicCall("Count").toInt();
-    table->querySubObject("Cell(int, int)",row,column)->querySubObject("Range")->dynamicCall("SetText(QString)", text);
+    int Count = rows->dynamicCall("Count").toInt();
+    table->querySubObject("Cell(int, int)", row, column)
+        ->querySubObject("Range")
+        ->dynamicCall("SetText(QString)", text);
 }
 
-void QWord::setCellFontBold(int row, int column, bool isBold)	//设置内容粗体  isBold控制是否粗体
+void QWord::setCellFontBold(int row, int column, bool isBold)  //设置内容粗体  isBold控制是否粗体
 {
     QAxObject* selection = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+    if (nullptr == selection) {
         return;
     }
     QAxObject* table = selection->querySubObject("Tables(1)");
-    if(nullptr== table)
-    {
+    if (nullptr == table) {
         return;
     }
-    table->querySubObject("Cell(int, int)",row,column)->querySubObject("Range")->dynamicCall("SetBold(int)", isBold);
+    table->querySubObject("Cell(int, int)", row, column)->querySubObject("Range")->dynamicCall("SetBold(int)", isBold);
 }
-void QWord::setCellFontSize(int row, int column, int size)		//设置文字大小
+void QWord::setCellFontSize(int row, int column, int size)  //设置文字大小
 {
     QAxObject* selection = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+    if (nullptr == selection) {
         return;
     }
     QAxObject* table = selection->querySubObject("Tables(1)");
-    if(nullptr== table)
-    {
+    if (nullptr == table) {
         return;
     }
-    table->querySubObject("Cell(int, int)",row,column)->querySubObject("Range")->querySubObject("Font")->setProperty("Size", size);
+    table->querySubObject("Cell(int, int)", row, column)
+        ->querySubObject("Range")
+        ->querySubObject("Font")
+        ->setProperty("Size", size);
 }
-QVariant QWord::getCellValue(int row, int column)					//获取单元格内容 此处对于Excel来说列和行从1开始最少
+QVariant QWord::getCellValue(int row, int column)  //获取单元格内容 此处对于Excel来说列和行从1开始最少
 {
     QAxObject* selection = m_word->querySubObject("Selection");
     QAxObject* table = selection->querySubObject("Tables(1)");
-    if(nullptr!=selection&&nullptr!=table)
-        return table->querySubObject("Cell(int, int)",row,column)->querySubObject("Range")->property("Text");
+    if (nullptr != selection && nullptr != table)
+        return table->querySubObject("Cell(int, int)", row, column)->querySubObject("Range")->property("Text");
     return QVariant();
 }
-int QWord::getTableCount()
-{
+int QWord::getTableCount() {
     QAxObject* tables = m_document->querySubObject("Tables");
     int val;
-    if(nullptr!= tables)
-    {
+    if (nullptr != tables) {
         val = tables->property("Count").toInt();
     }
     return val;
 }
-void QWord::moveForEnd()
-{
+void QWord::moveForEnd() {
     QAxObject* selection = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+    if (nullptr == selection) {
         return;
     }
     QVariantList params;
@@ -665,136 +560,105 @@ void QWord::moveForEnd()
     params.append(0);
     selection->dynamicCall("EndOf(QVariant&, QVariant&)", params).toInt();
 }
-void QWord::insertCellPic(int row,int column,const QString& picPath)
-{
+void QWord::insertCellPic(int row, int column, const QString& picPath) {
     QAxObject* selection = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+    if (nullptr == selection) {
         return;
     }
     QAxObject* table = selection->querySubObject("Tables(1)");
-    if(nullptr== table)
-    {
+    if (nullptr == table) {
         return;
     }
-    QAxObject* range = table->querySubObject("Cell(int, int)",row,column)->querySubObject("Range");
-    if(nullptr== range)
-    {
+    QAxObject* range = table->querySubObject("Cell(int, int)", row, column)->querySubObject("Range");
+    if (nullptr == range) {
         return;
     }
-    range->querySubObject("InlineShapes")->dynamicCall("AddPicture(const QString&)",picPath);
+    range->querySubObject("InlineShapes")->dynamicCall("AddPicture(const QString&)", picPath);
 }
-void QWord::setTableAutoFitBehavior(int flag)
-{
+void QWord::setTableAutoFitBehavior(int flag) {
     QAxObject* selection = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+    if (nullptr == selection) {
         return;
     }
     QAxObject* table = selection->querySubObject("Tables(1)");
-    if(nullptr== table)
-    {
+    if (nullptr == table) {
         return;
     }
-    if(0 <= flag &&flag <= 2 )
-        table->dynamicCall("AutoFitBehavior(WdAutoFitBehavior)", flag);
+    if (0 <= flag && flag <= 2) table->dynamicCall("AutoFitBehavior(WdAutoFitBehavior)", flag);
 }
-void QWord::deleteSelectColumn(int column)
-{
+void QWord::deleteSelectColumn(int column) {
     QAxObject* selection = m_word->querySubObject("Selection");
-    if(nullptr== selection)
-    {
+    if (nullptr == selection) {
         return;
     }
     QAxObject* table = selection->querySubObject("Tables(1)");
-    if(nullptr== table)
-    {
+    if (nullptr == table) {
         return;
     }
-    QAxObject* columns = table->querySubObject("Columns(int)",column);
-    if(nullptr== columns)
-    {
+    QAxObject* columns = table->querySubObject("Columns(int)", column);
+    if (nullptr == columns) {
         return;
     }
     columns->dynamicCall("Delete()");
 }
 
-void QWord::setOptionCheckSpell(bool flags)
-{
+void QWord::setOptionCheckSpell(bool flags) {
     QAxObject* opetions = m_word->querySubObject("Options");
-    if(!opetions)
-        return;
-    opetions->setProperty("CheckGrammarAsYouType",flags);
-    opetions->setProperty("CheckGrammarWithSpelling",flags);
-    opetions->setProperty("ContextualSpeller",flags);
-    opetions->setProperty("CheckSpellingAsYouType",flags);
+    if (!opetions) return;
+    opetions->setProperty("CheckGrammarAsYouType", flags);
+    opetions->setProperty("CheckGrammarWithSpelling", flags);
+    opetions->setProperty("ContextualSpeller", flags);
+    opetions->setProperty("CheckSpellingAsYouType", flags);
 }
 
-void QWord::skidPage()
-{
-    insertText("\x0c");
-}
+void QWord::skidPage() { insertText("\x0c"); }
 
-void QWord::addTableRow(int tableIndex ,int nRow,int rowCount)
-{
-    QAxObject* tables=m_document->querySubObject("Tables");
-    if(nullptr== tables)
-    {
+void QWord::addTableRow(int tableIndex, int nRow, int rowCount) {
+    QAxObject* tables = m_document->querySubObject("Tables");
+    if (nullptr == tables) {
         return;
     }
-    QAxObject* table = tables->querySubObject("Item(int)",tableIndex);
-    if(nullptr== table)
-    {
+    QAxObject* table = tables->querySubObject("Item(int)", tableIndex);
+    if (nullptr == table) {
         return;
     }
-    QAxObject* rows =table->querySubObject("Rows");
-    if(nullptr== rows)
-    {
+    QAxObject* rows = table->querySubObject("Rows");
+    if (nullptr == rows) {
         return;
     }
-    int Count =rows->dynamicCall("Count").toInt();
-    if(0<nRow && nRow <= Count )
-    {
-        for(int i =0; i<rowCount; ++i)
-        {
-            QString sPos = QString("Item(%1)").arg(nRow+i);
-            QAxObject* row= rows->querySubObject(sPos.toStdString().c_str());
-            QAxObject* row1= rows->querySubObject("Last");
-            QAxObject* row2= rows->querySubObject("Row(int)", nRow+i);
-            QAxObject* row3= rows->querySubObject("Item(int)",nRow+i);
-            if (nullptr != row)
-            {
-                QVariant param =row ->asVariant();
+    int Count = rows->dynamicCall("Count").toInt();
+    if (0 < nRow && nRow <= Count) {
+        for (int i = 0; i < rowCount; ++i) {
+            QString sPos = QString("Item(%1)").arg(nRow + i);
+            QAxObject* row = rows->querySubObject(sPos.toStdString().c_str());
+            QAxObject* row1 = rows->querySubObject("Last");
+            QAxObject* row2 = rows->querySubObject("Row(int)", nRow + i);
+            QAxObject* row3 = rows->querySubObject("Item(int)", nRow + i);
+            if (nullptr != row) {
+                QVariant param = row->asVariant();
                 /*rows->dynamicCall("Add(Variant)",param);*/
-                QAxObject* NewRow = rows->querySubObject("Add(Variant)",param);
+                QAxObject* NewRow = rows->querySubObject("Add(Variant)", param);
             }
-
         }
     }
 }
 ////创建表格
-void QWord::insertTable(int tableIndex,int row,int column)
-{
-
-    QAxObject* tables=m_document->querySubObject("Tables");
-    if(nullptr==tables)
-    {
+void QWord::insertTable(int tableIndex, int row, int column) {
+    QAxObject* tables = m_document->querySubObject("Tables");
+    if (nullptr == tables) {
         return;
     }
-    QAxObject* table = tables->querySubObject("Item(int)",tableIndex);
-    if(nullptr==table)
-    {
+    QAxObject* table = tables->querySubObject("Item(int)", tableIndex);
+    if (nullptr == table) {
         return;
     }
-    //QAxObject* rows =table->querySubObject("Rows");
+    // QAxObject* rows =table->querySubObject("Rows");
     QAxObject* selection = m_word->querySubObject("Selection");
-    if(nullptr==selection)
-    {
+    if (nullptr == selection) {
         return;
     }
     QAxObject* range = selection->querySubObject("Range");
-    if(nullptr==range)
-    {
+    if (nullptr == range) {
         return;
     }
     QVariantList params;
@@ -802,93 +666,77 @@ void QWord::insertTable(int tableIndex,int row,int column)
     params.append(row);
     params.append(column);
     tables->querySubObject("Add(QAxObject*, int, int, QVariant&, QVariant&)", params);
-    table = selection->querySubObject("Tables(int)",1);
-    table->setProperty("Style","网格型");
+    table = selection->querySubObject("Tables(int)", 1);
+    table->setProperty("Style", "网格型");
 
     QAxObject* Borders = table->querySubObject("Borders");
-    if(nullptr==Borders)
-    {
+    if (nullptr == Borders) {
         return;
     }
-    Borders->setProperty("InsideLineStyle",1);
-    Borders->setProperty("OutsideLineStyle",1);
+    Borders->setProperty("InsideLineStyle", 1);
+    Borders->setProperty("OutsideLineStyle", 1);
 }
 ////设置表格列宽
-void QWord::setColumnWidth(int nTable,int column,int width)
-{
-    QAxObject* pTables =m_document->querySubObject("Tables");
-    if(nullptr== pTables)
-    {
+void QWord::setColumnWidth(int nTable, int column, int width) {
+    QAxObject* pTables = m_document->querySubObject("Tables");
+    if (nullptr == pTables) {
         return;
     }
-    QAxObject* table=pTables->querySubObject("Item(int)",nTable);
-    if(table)
-    {
-        table->querySubObject("Columns(int)",column)->setProperty("width",width);
+    QAxObject* table = pTables->querySubObject("Item(int)", nTable);
+    if (table) {
+        table->querySubObject("Columns(int)", column)->setProperty("width", width);
     }
-
 }
 
-
 //在表格中插入图片
-void QWord::insertCellPic(int nTable,int row,int column,const QString& picPath)
-{
-    QAxObject* pTables=m_document->querySubObject("Tables");
-    if(nullptr== pTables)
-    {
+void QWord::insertCellPic(int nTable, int row, int column, const QString& picPath) {
+    QAxObject* pTables = m_document->querySubObject("Tables");
+    if (nullptr == pTables) {
         return;
     }
-    QAxObject* table=pTables->querySubObject("Item(int)",nTable);
-    if(nullptr== table)
-    {
+    QAxObject* table = pTables->querySubObject("Item(int)", nTable);
+    if (nullptr == table) {
         return;
     }
-    QAxObject* range=table->querySubObject("Cell(int,int )",row,column)->querySubObject("Range");
-    if(nullptr== range)
-    {
+    QAxObject* range = table->querySubObject("Cell(int,int )", row, column)->querySubObject("Range");
+    if (nullptr == range) {
         return;
     }
-    range->querySubObject("InlineShapes")->dynamicCall("AddPicture(const QString&)",picPath);
+    range->querySubObject("InlineShapes")->dynamicCall("AddPicture(const QString&)", picPath);
 }
 
 //设置内容粗体
-void QWord::setCellFontBold(int nTable,int row,int column,bool isBold)
-{
+void QWord::setCellFontBold(int nTable, int row, int column, bool isBold) {
     QAxObject* pTables = m_document->querySubObject("Tables");
-    if(nullptr== pTables)
-    {
+    if (nullptr == pTables) {
         return;
     }
-    QAxObject* table =pTables->querySubObject("Item(int)",nTable);
-    if(nullptr== table)
-    {
+    QAxObject* table = pTables->querySubObject("Item(int)", nTable);
+    if (nullptr == table) {
         return;
     }
-    table->querySubObject("Cell(int,int )",row,column)->querySubObject("Range")->dynamicCall("SetBold(int)",isBold);
-
-
+    table->querySubObject("Cell(int,int )", row, column)->querySubObject("Range")->dynamicCall("SetBold(int)", isBold);
 }
 //设置文字大小
-void QWord:: setCellFontSize(int nTable,int row,int column,int size)
-{
-    QAxObject* pTables=m_document->querySubObject("Tables");
-    if(nullptr== pTables)
-    {
+void QWord::setCellFontSize(int nTable, int row, int column, int size) {
+    QAxObject* pTables = m_document->querySubObject("Tables");
+    if (nullptr == pTables) {
         return;
     }
-    QAxObject* table =pTables->querySubObject("Item(int)",nTable);
-    if(nullptr== table)
-    {
+    QAxObject* table = pTables->querySubObject("Item(int)", nTable);
+    if (nullptr == table) {
         return;
     }
-    table->querySubObject("Cell(int,int)",row,column)->querySubObject("Range")->querySubObject("Font")->setProperty("Size",size);
-
+    table->querySubObject("Cell(int,int)", row, column)
+        ->querySubObject("Range")
+        ->querySubObject("Font")
+        ->setProperty("Size", size);
 }
 
-void QWord::setVisible(bool isVisible)
-{
-    if(m_word != nullptr)
-    {
-        m_word->setProperty("Visible",isVisible);
+void QWord::setVisible(bool isVisible) {
+    if (m_word != nullptr) {
+        m_word->setProperty("Visible", isVisible);
     }
 }
+
+}  // namespace LCX::io
