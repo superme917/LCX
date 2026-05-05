@@ -202,11 +202,13 @@ void MusicWindow::onImportButtomClicked() {
     QString playlistLinkStr = playlistLink_->text();
     if (playlistLinkStr.isEmpty()) {
         ElaMessageBar::warning(ElaMessageBarType::BottomRight, "警告", "还没有填入歌单链接呀😴", 2000, this);
+    } else if (playlistLinkStr == "lcx" || playlistLinkStr == "LCX") {
+        emit lcx();
     } else {
         if (musicPlatform_->currentText() == "网易云音乐") {
             music_ = new core::CloudMusic(this);
         } else if (musicPlatform_->currentText() == "QQ音乐") {
-            // music_ = new QQMusic(this);
+            music_ = new core::QQMusic(this);
         } else if (musicPlatform_->currentText() == "酷狗音乐") {
             // musicApi_ = new kugouMusic();
         }
@@ -267,7 +269,8 @@ void MusicWindow::onExportFinished() {
         exportWaitDialog_->deleteLater();
         exportWaitDialog_ = nullptr;
     }
-    ElaMessageBar::success(ElaMessageBarType::PositionPolicy::BottomRight, "Success", "歌单导出成功，我们可太棒了😃", 2000, this);
+    ElaMessageBar::success(ElaMessageBarType::PositionPolicy::BottomRight, "Success", "歌单导出成功，我们可太棒了😃",
+                           2000, this);
 }
 
 void MusicWindow::onExportCanceled() {

@@ -13,11 +13,12 @@ include_directories(d3party/ElaWidgetTools/)
 include_directories(d3party/QCloudMusicApi/)
 include_directories(${PROJECT_SOURCE_DIR}/src)
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets Network AxContainer)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Network AxContainer Multimedia)
 set(LIBS
     Qt6::Widgets
     Qt6::Network
     Qt6::AxContainer
+    Qt6::Multimedia
     ${CMAKE_SOURCE_DIR}/d3party/ElaWidgetTools/lib/ElaWidgetTools.lib
     ${CMAKE_SOURCE_DIR}/d3party/QCloudMusicApi/lib/QCloudMusicApi.lib
 )

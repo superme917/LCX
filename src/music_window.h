@@ -4,8 +4,8 @@
 
 #pragma once
 
-// #include "core/qq_music.h"
 #include "core/cloud_music.h"
+#include "core/qq_music.h"
 #include "export_wait_dialog.h"
 #include "io/word_export.h"
 
@@ -75,6 +75,9 @@ public:
 
 protected:
     virtual void resizeEvent(QResizeEvent *event);
+
+signals:
+    Q_SIGNAL void lcx();
 
 private slots:
     // 导入歌单

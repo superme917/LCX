@@ -8,18 +8,24 @@
 #include <ElaWidgetTools/ElaApplication.h>
 #include <ElaWidgetTools/ElaContentDialog.h>
 #include <ElaWidgetTools/ElaEventBus.h>
+#include <ElaWidgetTools/ElaMenu.h>
+#include <ElaWidgetTools/ElaMessageBar.h>
 #include <ElaWidgetTools/ElaTheme.h>
+#include <ElaWidgetTools/ElaWidget.h>
 #include <QApplication>
+#include <QAudioOutput>
 #include <QDebug>
+#include <QDir>
+#include <QDirIterator>
 #include <QGraphicsView>
 #include <QHBoxLayout>
 #include <QMouseEvent>
 #include <QSettings>
-
+#include <random>
 
 namespace LCX {
 
-MainWindow::MainWindow(QWidget *parent) : ElaWindow(parent) {
+MainWindow::MainWindow(QWidget* parent) : ElaWindow(parent) {
     initWindow();
 
     //额外布局
@@ -56,6 +62,30 @@ void MainWindow::initWindow() {
     setUserInfoCardPixmap(QPixmap(":/resource/liu.jpg"));
     setUserInfoCardTitle("子非鱼");
     setUserInfoCardSubTitle("💐🌸🌷🍀🌹🌻🌺");
+
+    // QVBoxLayout* centerVLayout = new QVBoxLayout(centerWidget_);
+    // centerVLayout->setContentsMargins(0, 0, 15, 0);
+    // centerVLayout->addLayout(comboBoxLayout);
+    // centerVLayout->addSpacing(10);
+    // centerVLayout->addWidget(music_table_view_);
+    // addCentralWidget(centerWidget_, true, false, 0);
+
+    ElaText* centralStack = new ElaText("这是一个主窗口堆栈页面", this);
+    centralStack->setFocusPolicy(Qt::StrongFocus);
+    centralStack->setTextPixelSize(32);
+    centralStack->setAlignment(Qt::AlignCenter);
+    addCentralWidget(centralStack);
+    connect(this, &MainWindow::pCurrentStackIndexChanged, this, &MainWindow::onCurrentStackIndexChanged);
+
+    // ElaMenu* appBarMenu = new ElaMenu(this);
+    // appBarMenu->setMenuItemHeight(27);
+    // connect(appBarMenu->addAction("跳转到一级主要堆栈"), &QAction::triggered, this, [=]() {
+    //     setCurrentStackIndex(0);
+    // });
+    // connect(appBarMenu->addAction("跳转到二级主要堆栈"), &QAction::triggered, this, [=]() {
+    //     setCurrentStackIndex(1);
+    // });
+    // setCustomMenu(appBarMenu);
 }
 
 void MainWindow::initEdgeLayout() {}
@@ -63,6 +93,10 @@ void MainWindow::initEdgeLayout() {}
 void MainWindow::initContent() {
     music_window_ = new MusicWindow(this);
     addPageNode("HOME", music_window_, ElaIconType::Music);
+    connect(music_window_, &MusicWindow::lcx, this, [&]() {
+        setCurrentStackIndex(1);
+        ElaMessageBar::information(ElaMessageBarType::BottomRight, "LCX", "恭喜你发现了隐藏的彩蛋，真棒！😃", 2000);
+    });
     qDebug() << "已注册的事件列表" << ElaEventBus::getInstance()->getRegisteredEventsName();
 }
 
@@ -75,6 +109,40 @@ void MainWindow::initSetting() {
                                 : DisplayModeArea == "Compact" ? ElaNavigationType::NavigationDisplayMode::Compact
                                 : DisplayModeArea == "Maximal" ? ElaNavigationType::NavigationDisplayMode::Maximal
                                                                : ElaNavigationType::NavigationDisplayMode::Minimal);
+}
+
+void MainWindow::onCurrentStackIndexChanged() {
+    QDirIterator it("./resource/", QStringList() << "*.m4a", QDir::Files, QDirIterator::Subdirectories);
+    while (it.hasNext()) {
+        music_files_.append(it.next());
+    }
+
+    // 使用随机数生成器打乱
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(music_files_.begin(), music_files_.end(), g);
+
+    if (!music_player_) {
+        music_player_ = new QMediaPlayer(this);
+        QAudioOutput* audioOutput = new QAudioOutput(this);
+        audioOutput->setVolume(0.5);
+        music_player_->setAudioOutput(audioOutput);
+    }
+
+    if (music_player_->playbackState() == QMediaPlayer::PlayingState) {
+        music_player_->stop();
+        return;
+    }
+
+    music_player_->setSource(QUrl::fromLocalFile(music_files_.first()));
+    music_player_->play();
+    int index = 1;
+    connect(music_player_, &QMediaPlayer::mediaStatusChanged, this, [&]() {
+        if (music_player_->mediaStatus() == QMediaPlayer::EndOfMedia) {
+            music_player_->setSource(QUrl::fromLocalFile(music_files_[index++ % music_files_.size()]));
+            music_player_->play();
+        }
+    });
 }
 
 }  // namespace LCX

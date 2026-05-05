@@ -55,6 +55,7 @@ void WordExport::doExport() {
     }
 
     QWord word;
+    qDebug() << "Exporting to:" << path_;
     if (!word.createNewWord(path_)) {
         emit exportError("Word文档创建失败😰，It's time to 寻找外援了。");
         workThread_->quit();
@@ -65,11 +66,11 @@ void WordExport::doExport() {
         emit exportCanceled();
         return;
     }
-
+    qDebug() << "Word document created successfully.";
     word.setWordPageView(3);  //页面视图
     word.setFontName(tr("宋体"));
     word.setParagraphAlignment(0);  //下面文字位置
-
+    qDebug() << songs_.size() << " songs to export.";
     int currIdx = 0;
     for (int i = 0; i < songs_.size(); ++i) {
         if (checkCanceled()) {

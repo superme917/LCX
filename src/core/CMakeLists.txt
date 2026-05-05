@@ -3,8 +3,8 @@ add_library(${PROJECT_NAME}.core STATIC
     downloader.h
     base_music.cpp
     base_music.h
-    # qq_music.cpp
-    # qq_music.h
+    qq_music.cpp
+    qq_music.h
     cloud_music.cpp
     cloud_music.h
 )

@@ -99,11 +99,11 @@ void CloudMusic::importMusic(const QString &playlist_link) {
             // 通过时间戳对齐原始歌词和翻译歌词
             int ms = timeToMilliseconds(line);
             if (ms != -1) {
-                for (int i = 0; i < songs_[index].lyric.size(); ++i) {
-                    int delta = std::abs(ms - songs_[index].time[i]);
-                    if (delta <= 1) {
-                        songs_[index].tLyric[i] = content;
-                    }
+                auto it = std::min_element(songs_[index].time.begin(), songs_[index].time.end(),
+                                           [ms](int a, int b) { return std::abs(a - ms) < std::abs(b - ms); });
+                if (it != songs_[index].time.end()) {
+                    int idx = std::distance(songs_[index].time.begin(), it);
+                    songs_[index].tLyric[idx] = content;
                 }
             }
             songs_[index].has_tLyric = true;
@@ -123,11 +123,11 @@ void CloudMusic::importMusic(const QString &playlist_link) {
             // 通过时间戳对齐原始歌词和音译歌词
             int ms = timeToMilliseconds(line);
             if (ms != -1) {
-                for (int i = 0, j = songs_[index].lyric.size(); i < j; ++i) {
-                    int delta = std::abs(ms - songs_[index].time[i]);
-                    if (delta <= 1) {
-                        songs_[index].rLyric[i] = content;
-                    }
+                auto it = std::min_element(songs_[index].time.begin(), songs_[index].time.end(),
+                                           [ms](int a, int b) { return std::abs(a - ms) < std::abs(b - ms); });
+                if (it != songs_[index].time.end()) {
+                    int idx = std::distance(songs_[index].time.begin(), it);
+                    songs_[index].rLyric[idx] = content;
                 }
             }
             songs_[index].has_rLyric = true;

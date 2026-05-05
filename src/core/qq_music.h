@@ -1,28 +1,26 @@
 //
-// QQMusic - 使用 Python API Bridge 的 QQ 音乐支持
-// Created by AI Assistant on 2026/05/01
+// Create By WangYiFan on 2026/05/01
 //
 
-#ifndef QQ_MUSIC_H
-#define QQ_MUSIC_H
+#pragma once
 
 #include "core/base_music.h"
-#include <QProcess>
-#include <QTimer>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QVector>
 
-class QQMusic : public BaseMusic
-{
+#include <QJsonObject>
+#include <QProcess>
+
+namespace LCX::core {
+
+// QQ音乐解析接口
+class QQMusic : public BaseMusic {
     Q_OBJECT
 public:
+    // 构造函数
     QQMusic(QWidget *parent = nullptr);
+    // 析构函数
     ~QQMusic();
-
-    virtual bool checkMusicLink(QString musicLink) override;
-    virtual void importMusic() override;
+    // 解析歌单链接，获取歌词
+    virtual void importMusic(const QString &playlist_link) override;
 
 private slots:
     void onProcessReadyRead();
@@ -35,9 +33,8 @@ private:
     void sendCommand(const QString &cmd, const QJsonObject &params);
 
 private:
-    QProcess *pythonProcess_;
-    int curIdx_ = 0;
-    QJsonObject pendingCommand_;
+    QProcess *python_process_ = nullptr;
+    QJsonObject pending_command_;
 };
 
-#endif // QQ_MUSIC_H
+}  // namespace LCX::core

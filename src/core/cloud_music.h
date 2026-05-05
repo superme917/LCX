@@ -13,7 +13,6 @@ namespace LCX::core {
 // 网易云音乐解析接口
 class CloudMusic : public BaseMusic {
     Q_OBJECT
-
 public:
     // 构造函数
     CloudMusic(QWidget *parent = nullptr);
