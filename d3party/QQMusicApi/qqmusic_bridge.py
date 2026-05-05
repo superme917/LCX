@@ -45,7 +45,7 @@ async def main():
             line = sys.stdin.readline()
             if not line:
                 break
-                
+
             line = line.strip()
             if not line:
                 continue
@@ -58,7 +58,7 @@ async def main():
                 print(json.dumps(response, ensure_ascii=False))
                 sys.stdout.flush()
                 continue
-                
+
             cmd = request.get("cmd", "")
             params = request.get("params", {})
 
@@ -68,11 +68,11 @@ async def main():
                 response = {"code": 0, "data": to_dict(result)}
             elif cmd == "lyric":
                 song_id = int(params.get("id"))
-                result = await client.lyric.get_lyric(value=song_id, trans=True)
+                result = await client.lyric.get_lyric(value=song_id, trans=True, roma=True)
                 response = {"code": 0, "data": to_dict(result.decrypt())}
             else:
                 response = {"code": -1, "error": f"Unknown command: {cmd}"}
-            
+
             # 输出响应
             print(json.dumps(response, ensure_ascii=False), flush=True)
 
