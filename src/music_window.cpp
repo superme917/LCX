@@ -61,8 +61,7 @@ void MusicTableViewModel::setHeader() {
 
 void MusicTableViewModel::setSongs(const QVector<core::Song>& songs) {
     for (int i = 0; i < songs.size(); ++i) {
-        QTime time(0, 0, 0, 0);
-        time.addMSecs(songs[i].duration);
+        QTime time = QTime::fromMSecsSinceStartOfDay(songs[i].duration);
         QString duration = time.toString("mm:ss");
 
         QStringList song_list;
