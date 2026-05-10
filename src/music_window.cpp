@@ -3,6 +3,10 @@
 //
 
 #include "music_window.h"
+#include "core/cloud_music.h"
+#include "core/qq_music.h"
+#include "core/kugou_music.h"
+#include "core/qishui_music.h"
 
 #include <ElaWidgetTools/ElaComboBox.h>
 #include <ElaWidgetTools/ElaLineEdit.h>
@@ -127,6 +131,7 @@ MusicWindow::MusicWindow(QWidget* parent) : ElaScrollPage(parent) {
     musicPlatform_->addItem("网易云音乐");
     musicPlatform_->addItem("QQ音乐");
     musicPlatform_->addItem("酷狗音乐(概念版)");
+    musicPlatform_->addItem("汽水音乐");
 
     playlistLink_ = new ElaLineEdit(this);
     playlistLink_->setFixedSize(200, 30);
@@ -219,6 +224,8 @@ void MusicWindow::onImportButtomClicked() {
             music_ = new core::QQMusic(this);
         } else if (musicPlatform_->currentText() == "酷狗音乐(概念版)") {
             music_ = new core::KuGouMusic(this);
+        } else if (musicPlatform_->currentText() == "汽水音乐") {
+            music_ = new core::QiShuiMusic(this);
         }
         connect(music_, &core::BaseMusic::songsNumberChanged, this, &MusicWindow::onSongsNumberChanged);
         connect(music_, &core::BaseMusic::taskFinished, this, &MusicWindow::ontaskFinished);

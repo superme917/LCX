@@ -7,5 +7,7 @@ add_library(${PROJECT_NAME}.core STATIC
     cloud_music.h
     kugou_music.cpp
     kugou_music.h
+    qishui_music.cpp
+    qishui_music.h
 )
 target_link_libraries(${PROJECT_NAME}.core PUBLIC ${LIBS})

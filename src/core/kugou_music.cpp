@@ -17,10 +17,7 @@
 namespace LCX::core {
 
 KuGouMusic::KuGouMusic(QWidget *parent)
-    : BaseMusic(parent),
-      network_manager_(new QNetworkAccessManager(this)),
-      kugou_server_process_(new QProcess(this)) {
-
+    : BaseMusic(parent), network_manager_(new QNetworkAccessManager(this)), kugou_server_process_(new QProcess(this)) {
     // 启动酷狗 API 服务器
     QStringList exeCandidates;
     exeCandidates << QCoreApplication::applicationDirPath() + "/../../../d3party/KuGouMusicApi/app_win.exe"
@@ -135,9 +132,8 @@ void KuGouMusic::fetchLyric(const QString &hash, int song_index) {
         songs_[song_index].duration = songInfo["duration"].toInt();
 
         // 获取歌词
-        QString lyricUrl = QString("http://127.0.0.1:3000/lyric?id=%1&accesskey=%2&fmt=krc&decode=true")
-                               .arg(songId)
-                               .arg(accessKey);
+        QString lyricUrl =
+            QString("http://127.0.0.1:3000/lyric?id=%1&accesskey=%2&fmt=krc&decode=true").arg(songId).arg(accessKey);
         QNetworkRequest lyricRequest;
         lyricRequest.setUrl(QUrl(lyricUrl));
 
@@ -221,7 +217,7 @@ void KuGouMusic::parseTransLyric(const QString &content, int song_index) {
                 songs_[song_index].tLyric.push_back(line);
             }
             songs_[song_index].has_tLyric = true;
-        } else if (item["type"] == 0) { // 音译
+        } else if (item["type"] == 0) {  // 音译
             QJsonArray lines = item["lyricContent"].toArray();
             if (lines.size() == 0) {
                 continue;
