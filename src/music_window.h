@@ -6,6 +6,7 @@
 
 #include "core/cloud_music.h"
 #include "core/qq_music.h"
+#include "core/kugou_music.h"
 #include "export_wait_dialog.h"
 #include "io/word_export.h"
 

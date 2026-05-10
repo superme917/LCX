@@ -9,8 +9,6 @@
 
 #include <QMediaPlayer>
 
-class ElaContentDialog;
-
 namespace LCX {
 
 class MainWindow : public ElaWindow {
@@ -29,7 +27,6 @@ private:
     void onCurrentStackIndexChanged();
 
 private:
-    ElaContentDialog* close_dialog_ = nullptr;
     MusicWindow* music_window_ = nullptr;
     QMediaPlayer* music_player_ = nullptr;
     QStringList music_files_;

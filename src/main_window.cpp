@@ -6,7 +6,6 @@
 #include "music_window.h"
 
 #include <ElaWidgetTools/ElaApplication.h>
-#include <ElaWidgetTools/ElaContentDialog.h>
 #include <ElaWidgetTools/ElaEventBus.h>
 #include <ElaWidgetTools/ElaMenu.h>
 #include <ElaWidgetTools/ElaMessageBar.h>
@@ -36,19 +35,6 @@ MainWindow::MainWindow(QWidget* parent) : ElaWindow(parent) {
 
     // 设置用户偏好
     initSetting();
-
-    // 拦截默认关闭事件
-    close_dialog_ = new ElaContentDialog(this);
-    close_dialog_->setLeftButtonText("取消");
-    close_dialog_->setMiddleButtonText("最小化");
-    close_dialog_->setRightButtonText("确定");
-    connect(close_dialog_, &ElaContentDialog::rightButtonClicked, this, &MainWindow::closeWindow);
-    connect(close_dialog_, &ElaContentDialog::middleButtonClicked, this, [=]() {
-        close_dialog_->close();
-        showMinimized();
-    });
-    this->setIsDefaultClosed(false);
-    connect(this, &MainWindow::closeButtonClicked, this, [=]() { close_dialog_->exec(); });
 
     //移动到中心
     moveToCenter();
@@ -112,7 +98,7 @@ void MainWindow::initSetting() {
 }
 
 void MainWindow::onCurrentStackIndexChanged() {
-    QDirIterator it("./resource/", QStringList() << "*.m4a", QDir::Files, QDirIterator::Subdirectories);
+    QDirIterator it("D:/LCX/src/resource/", QStringList() << "*.m4a", QDir::Files, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         music_files_.append(it.next());
     }

@@ -58,5 +58,10 @@ compile_commands.json
 
 # 保留d3party下的所有文件
 !d3party/**
+
+# d3party 下忽略 Python 缓存
+d3party/**/*.pyc
+d3party/**/__pycache__/
+
 .vscode/
 .qtcreator/

@@ -126,7 +126,7 @@ MusicWindow::MusicWindow(QWidget* parent) : ElaScrollPage(parent) {
     musicPlatform_ = new ElaComboBox(this);
     musicPlatform_->addItem("网易云音乐");
     musicPlatform_->addItem("QQ音乐");
-    musicPlatform_->addItem("酷狗音乐");
+    musicPlatform_->addItem("酷狗音乐(概念版)");
 
     playlistLink_ = new ElaLineEdit(this);
     playlistLink_->setFixedSize(200, 30);
@@ -183,7 +183,9 @@ MusicWindow::MusicWindow(QWidget* parent) : ElaScrollPage(parent) {
     connect(music_table_view_, &ElaTableView::clicked, this, &MusicWindow::onClicked);
 }
 
-MusicWindow::~MusicWindow() {}
+MusicWindow::~MusicWindow() {
+    // music_ 的父对象是 this，Qt 会自动销毁，无需手动处理
+}
 
 void MusicWindow::resizeEvent(QResizeEvent* event) {
     music_table_view_->setColumnWidth(0, 60);
@@ -205,12 +207,18 @@ void MusicWindow::onImportButtomClicked() {
     } else if (playlistLinkStr == "lcx" || playlistLinkStr == "LCX") {
         emit lcx();
     } else {
+        // 先删除旧对象，释放端口
+        if (music_) {
+            music_->deleteLater();
+            music_ = nullptr;
+        }
+
         if (musicPlatform_->currentText() == "网易云音乐") {
             music_ = new core::CloudMusic(this);
         } else if (musicPlatform_->currentText() == "QQ音乐") {
             music_ = new core::QQMusic(this);
-        } else if (musicPlatform_->currentText() == "酷狗音乐") {
-            // musicApi_ = new kugouMusic();
+        } else if (musicPlatform_->currentText() == "酷狗音乐(概念版)") {
+            music_ = new core::KuGouMusic(this);
         }
         connect(music_, &core::BaseMusic::songsNumberChanged, this, &MusicWindow::onSongsNumberChanged);
         connect(music_, &core::BaseMusic::taskFinished, this, &MusicWindow::ontaskFinished);
