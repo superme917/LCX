@@ -55,6 +55,9 @@ class MusicTableView : public ElaTableView {
 public:
     explicit MusicTableView(QWidget *parent = nullptr);
 
+    bool isFanyi() const;
+    bool isYinyi() const;
+
 protected:
     void contextMenuEvent(QContextMenuEvent *event) override;
 
@@ -64,6 +67,8 @@ Q_SIGNALS:
 
 private:
     ElaMenu *menu_;
+    QAction* fanyi_;
+    QAction* yinyi_;
 };
 
 class MusicWindow : public ElaScrollPage {

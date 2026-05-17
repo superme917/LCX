@@ -87,7 +87,12 @@ void WordExport::doExport() {
         word.insertMoveDown();
         word.setFontColor("wdColorBlack");
         word.setFontSize(12);
+        word.insertText(songs_[i].singer);
+        word.insertMoveDown();
         for (int j = 0; j < songs_[i].lyric.size(); ++j) {
+            if (songs_[i].lyric[j].isEmpty()) {
+                continue;
+            }
             word.insertText(songs_[i].lyric[j]);
             word.insertMoveDown();
             if (songs_[i].showTranslate && !songs_[i].tLyric[j].isEmpty()) {

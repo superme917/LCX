@@ -146,7 +146,7 @@ void QQMusic::onProcessReadyRead() {
             QString singer;
             for (int i = 0; i < singers.size(); ++i) {
                 singer += singers[i].toObject()["name"].toString();
-                if (i != singers.size() - 1) singer += "/";
+                if (i != singers.size() - 1) singer += "、";
             }
 
             QJsonObject params;

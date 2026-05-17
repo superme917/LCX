@@ -7,7 +7,7 @@
 namespace LCX::core {
 
 BaseMusic::BaseMusic(QWidget *parent)
-    : QObject(parent), time_regular_(R"(\[((\d+):(\d+)\.(\d+))\])", QRegularExpression::CaseInsensitiveOption) {}
+    : QObject(parent), time_regular_(R"(\[((\d+):(\d+)\.(\d+)(?:-\d+)?)\])", QRegularExpression::CaseInsensitiveOption) {}
 
 BaseMusic::~BaseMusic() {}
 

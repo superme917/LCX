@@ -85,26 +85,34 @@ void MusicTableViewModel::setIcon(const QVector<core::Song>& songs) {
 
 MusicTableView::MusicTableView(QWidget* parent) : ElaTableView(parent) {
     menu_ = new ElaMenu(this);
-    QAction* fanyi = menu_->addElaIconAction(ElaIconType::Xmark, "翻译");
-    QAction* yinyi = menu_->addElaIconAction(ElaIconType::Xmark, "音译");
-    fanyi->setCheckable(true);
-    yinyi->setCheckable(true);
-    connect(fanyi, &QAction::triggered, this, [this, fanyi](bool checked) {
+    fanyi_ = menu_->addElaIconAction(ElaIconType::Xmark, "翻译");
+    yinyi_ = menu_->addElaIconAction(ElaIconType::Xmark, "音译");
+    fanyi_->setCheckable(true);
+    yinyi_->setCheckable(true);
+    connect(fanyi_, &QAction::triggered, this, [this](bool checked) {
         if (checked) {
-            fanyi->setProperty("ElaIconType", QChar(ElaIconType::Check));
+            fanyi_->setProperty("ElaIconType", QChar(ElaIconType::Check));
         } else {
-            fanyi->setProperty("ElaIconType", QChar(ElaIconType::Xmark));
+            fanyi_->setProperty("ElaIconType", QChar(ElaIconType::Xmark));
         }
         emit translateLyric(checked);
     });
-    connect(yinyi, &QAction::triggered, this, [this, yinyi](bool checked) {
+    connect(yinyi_, &QAction::triggered, this, [this](bool checked) {
         if (checked) {
-            yinyi->setProperty("ElaIconType", QChar(ElaIconType::Check));
+            yinyi_->setProperty("ElaIconType", QChar(ElaIconType::Check));
         } else {
-            yinyi->setProperty("ElaIconType", QChar(ElaIconType::Xmark));
+            yinyi_->setProperty("ElaIconType", QChar(ElaIconType::Xmark));
         }
         emit rTranslateLyric(checked);
     });
+}
+
+bool MusicTableView::isFanyi() const {
+    return fanyi_->property("ElaIconType").toChar() == QChar(ElaIconType::Check);
+}
+
+bool MusicTableView::isYinyi() const {
+    return yinyi_->property("ElaIconType").toChar() == QChar(ElaIconType::Check);
 }
 
 void MusicTableView::contextMenuEvent(QContextMenuEvent* event) {
@@ -320,8 +328,8 @@ void MusicWindow::ontaskFinished() {
     music_table_view_->setColumnWidth(5, 60);
     music_table_view_->setColumnWidth(6, 60);
     // 默认不导出中译和音译
-    onTranslateLyric(false);
-    onRTranslateLyric(false);
+    onTranslateLyric(music_table_view_->isFanyi());
+    onRTranslateLyric(music_table_view_->isYinyi());
     ElaMessageBar::success(ElaMessageBarType::BottomRight, "Success", "歌单导入成功，我们可太棒了😃", 2000, this);
 }
 

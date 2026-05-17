@@ -99,24 +99,21 @@ void KuGouMusic::onPlaylistReplyFinished() {
     QJsonArray songs_hash = root["data"].toObject()["songs"].toArray();
     songs_.resize(songs_hash.size());
     for (int i = 0; i < songs_.size(); ++i) {
-        QString hash = songs_hash[i].toObject()["hash"].toString();
-        QString keywords = songs_hash[i].toObject()["name"].toString();
-        fetchLyric(hash, keywords, i);
+        QJsonObject song_info = songs_hash[i].toObject();
+        QString hash = song_info["hash"].toString();
+        QString keywords = song_info["name"].toString();
+        int duration = song_info["timelen"].toInt();
+        QStringList singer_and_name = keywords.split(" - ");
+        songs_[i].name = singer_and_name[1];
+        songs_[i].singer = singer_and_name[0];
+        songs_[i].duration = duration;
+        fetchLyric(hash, keywords, duration, i);
     }
-
-    // emit songsNumberChanged(songs.size(), 0);
-
-    // // 遍历每首歌，获取歌词
-    // for (int i = 0; i < songs.size(); ++i) {
-    //     QJsonObject song = songs[i].toObject();
-    //     QString hash = song["hash"].toString();
-    //     fetchLyric(hash, i);
-    // }
 }
 
-void KuGouMusic::fetchLyric(const QString &hash, const QString &keywords, int song_index) {
+void KuGouMusic::fetchLyric(const QString &hash, const QString &keywords, int duration, int song_index) {
     // 先搜索获取 accesskey
-    QString accesskeyUrl = QString("http://127.0.0.1:3000/search/lyric?hash=%1&keywords=%2").arg(hash).arg(keywords);
+    QString accesskeyUrl = QString("http://127.0.0.1:3000/search/lyric?hash=%1&keywords=%2&&duration=%3").arg(hash).arg(keywords).arg(duration);
     QNetworkRequest accesskeyRequest;
     accesskeyRequest.setUrl(QUrl(accesskeyUrl));
     QNetworkReply *reply = network_manager_->get(accesskeyRequest);
@@ -128,9 +125,6 @@ void KuGouMusic::fetchLyric(const QString &hash, const QString &keywords, int so
         QJsonObject songInfo = doc.object()["candidates"].toArray()[0].toObject();
         QString songId = songInfo["id"].toString();
         QString accessKey = songInfo["accesskey"].toString();
-        songs_[song_index].name = songInfo["song"].toString();
-        songs_[song_index].singer = songInfo["singer"].toString();
-        songs_[song_index].duration = songInfo["duration"].toInt();
 
         // 获取歌词
         QString lyricUrl =
@@ -186,7 +180,16 @@ void KuGouMusic::parseLyric(const QString &content, int song_index) {
     QString one_lien = match.captured(3);
     QRegularExpression tagRe("<\\d+,\\d+,\\d+>");
     QString lyric = one_lien.remove(tagRe).trimmed();
-    songs_[song_index].lyric.push_back(lyric);
+
+    QString pattern1 = QString(R"(^\s*%1\s*[-–])").arg(songs_[song_index].name);
+    QString pattern2 = QString(R"([-–]\s*%1\s*$)").arg(songs_[song_index].name);
+    QRegularExpression regex1(pattern1, QRegularExpression::CaseInsensitiveOption);
+    QRegularExpression regex2(pattern2, QRegularExpression::CaseInsensitiveOption);
+    if (regex1.match(lyric).hasMatch() || regex2.match(lyric).hasMatch()) {
+        songs_[song_index].lyric.push_back("");
+    } else {
+        songs_[song_index].lyric.push_back(lyric);
+    }
 }
 
 void KuGouMusic::parseTransLyric(const QString &content, int song_index) {
