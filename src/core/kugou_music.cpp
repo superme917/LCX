@@ -100,7 +100,8 @@ void KuGouMusic::onPlaylistReplyFinished() {
     songs_.resize(songs_hash.size());
     for (int i = 0; i < songs_.size(); ++i) {
         QString hash = songs_hash[i].toObject()["hash"].toString();
-        fetchLyric(hash, i);
+        QString keywords = songs_hash[i].toObject()["name"].toString();
+        fetchLyric(hash, keywords, i);
     }
 
     // emit songsNumberChanged(songs.size(), 0);
@@ -113,9 +114,9 @@ void KuGouMusic::onPlaylistReplyFinished() {
     // }
 }
 
-void KuGouMusic::fetchLyric(const QString &hash, int song_index) {
+void KuGouMusic::fetchLyric(const QString &hash, const QString &keywords, int song_index) {
     // 先搜索获取 accesskey
-    QString accesskeyUrl = QString("http://127.0.0.1:3000/search/lyric?hash=%1").arg(hash);
+    QString accesskeyUrl = QString("http://127.0.0.1:3000/search/lyric?hash=%1&keywords=%2").arg(hash).arg(keywords);
     QNetworkRequest accesskeyRequest;
     accesskeyRequest.setUrl(QUrl(accesskeyUrl));
     QNetworkReply *reply = network_manager_->get(accesskeyRequest);

@@ -24,7 +24,7 @@ private slots:
 
 private:
     void fetchPlaylist(const QString &playlist_id);
-    void fetchLyric(const QString &hash, int song_index);
+    void fetchLyric(const QString &hash, const QString &keywords, int song_index);
     void parseLyric(const QString &content, int song_index);
     void parseTransLyric(const QString &content, int song_index);
 private:
