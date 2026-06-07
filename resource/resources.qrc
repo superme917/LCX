@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>liu.ico</file>
+        <file>qq.ico</file>
+        <file>kugou.ico</file>
+        <file>cloud.ico</file>
+        <file>qishui.ico</file>
+        <file>network.ico</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1100</width>
+    <height>750</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>LCX - 音乐管理工具</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_main">
+    <item>
+     <widget class="QWidget" name="toolbarArea" native="true">
+      <layout class="QHBoxLayout" name="horizontalLayout_toolbar">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QComboBox" name="comboPlatform">
+         <property name="minimumSize">
+          <size>
+           <width>150</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>选择音乐平台</string>
+         </property>
+         <item>
+          <property name="text">
+           <string>网易云音乐</string>
+          </property>
+          <property name="icon">
+           <iconset resource="../../resource/resources.qrc">
+            <normaloff>:/icons/cloud.ico</normaloff>:/icons/cloud.ico</iconset>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>QQ音乐</string>
+          </property>
+          <property name="icon">
+           <iconset resource="../../resource/resources.qrc">
+            <normaloff>:/icons/qq.ico</normaloff>:/icons/qq.ico</iconset>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>酷狗音乐</string>
+          </property>
+          <property name="icon">
+           <iconset resource="../../resource/resources.qrc">
+            <normaloff>:/icons/kugou.ico</normaloff>:/icons/kugou.ico</iconset>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>汽水音乐</string>
+          </property>
+          <property name="icon">
+           <iconset resource="../../resource/resources.qrc">
+            <normaloff>:/icons/qishui.ico</normaloff>:/icons/qishui.ico</iconset>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="editPlaylistUrl">
+         <property name="minimumSize">
+          <size>
+           <width>250</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="placeholderText">
+          <string>请输入歌单链接...</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnImport">
+         <property name="minimumSize">
+          <size>
+           <width>80</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>导入</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnExport">
+         <property name="minimumSize">
+          <size>
+           <width>80</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>导出</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_top">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QProgressBar" name="progressBar">
+      <property name="visible">
+       <bool>false</bool>
+      </property>
+      <property name="maximum">
+       <number>100</number>
+      </property>
+      <property name="value">
+       <number>0</number>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QTableView" name="tableView">
+      <property name="alternatingRowColors">
+       <bool>true</bool>
+      </property>
+      <property name="selectionMode">
+       <enum>QAbstractItemView::ExtendedSelection</enum>
+      </property>
+      <property name="selectionBehavior">
+       <enum>QAbstractItemView::SelectRows</enum>
+      </property>
+      <property name="showGrid">
+       <bool>true</bool>
+      </property>
+      <property name="sortingEnabled">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QWidget" name="statusArea" native="true">
+      <layout class="QHBoxLayout" name="horizontalLayout_status">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="labelNetworkIcon">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::RichText</enum>
+         </property>
+         <property name="pixmap">
+          <pixmap resource="../../resource/resources.qrc">:/icons/network.ico</pixmap>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="labelNetworkStatus">
+         <property name="text">
+          <string>正在检查网络连接...</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="serverStatusArea" native="true">
+         <property name="styleSheet">
+          <string notr="true">QWidget#serverStatusArea {
+    background: #f0f2f5;
+    border: 1px solid #d0d5dd;
+    border-radius: 4px;
+    padding: 2px 6px;
+}
+QWidget[platformBox=&quot;true&quot;] {
+    background: transparent;
+    border: none;
+    border-radius: 3px;
+    padding: 1px 6px;
+}</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_serverStatus">
+          <property name="spacing">
+           <number>4</number>
+          </property>
+          <property name="leftMargin">
+           <number>4</number>
+          </property>
+          <property name="topMargin">
+           <number>1</number>
+          </property>
+          <property name="rightMargin">
+           <number>4</number>
+          </property>
+          <property name="bottomMargin">
+           <number>1</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="labelServerTitle">
+            <property name="styleSheet">
+             <string notr="true">color: #667085; font-size: 12px; padding-right: 4px;</string>
+            </property>
+            <property name="text">
+             <string>本地服务</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="platformBox_QQ" native="true">
+            <property name="platformBox" stdset="0">
+             <bool>true</bool>
+            </property>
+            <layout class="QHBoxLayout" name="layout_platform_QQ">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <property name="leftMargin">
+              <number>2</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>2</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="iconQQMusic">
+               <property name="maximumSize">
+                <size>
+                 <width>14</width>
+                 <height>14</height>
+                </size>
+               </property>
+               <property name="pixmap">
+                <pixmap resource="../../resource/resources.qrc">:/icons/qq.ico</pixmap>
+               </property>
+               <property name="scaledContents">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="labelQQMusicServer">
+               <property name="toolTip">
+                <string>QQ音乐本地服务器状态（红=未启动，绿=运行中）</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">color: #dc3545; font-size: 12px; font-weight: bold;</string>
+               </property>
+               <property name="text">
+                <string>QQ音乐</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="platformBox_Wangyi" native="true">
+            <property name="platformBox" stdset="0">
+             <bool>true</bool>
+            </property>
+            <layout class="QHBoxLayout" name="layout_platform_Wangyi">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <property name="leftMargin">
+              <number>2</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>2</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="iconWangyiMusic">
+               <property name="maximumSize">
+                <size>
+                 <width>14</width>
+                 <height>14</height>
+                </size>
+               </property>
+               <property name="pixmap">
+                <pixmap resource="../../resource/resources.qrc">:/icons/cloud.ico</pixmap>
+               </property>
+               <property name="scaledContents">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="labelWangyiServer">
+               <property name="toolTip">
+                <string>网易云本地服务器状态（红=未启动，绿=运行中）</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">color: #dc3545; font-size: 12px; font-weight: bold</string>
+               </property>
+               <property name="text">
+                <string>网易云</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="platformBox_Kugou" native="true">
+            <property name="platformBox" stdset="0">
+             <bool>true</bool>
+            </property>
+            <layout class="QHBoxLayout" name="layout_platform_Kugou">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <property name="leftMargin">
+              <number>2</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>2</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="iconKugouMusic">
+               <property name="maximumSize">
+                <size>
+                 <width>14</width>
+                 <height>14</height>
+                </size>
+               </property>
+               <property name="pixmap">
+                <pixmap resource="../../resource/resources.qrc">:/icons/kugou.ico</pixmap>
+               </property>
+               <property name="scaledContents">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="labelKugouServer">
+               <property name="toolTip">
+                <string>酷狗本地服务器状态（红=未启动，绿=运行中）</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">color: #dc3545; font-size: 12px; font-weight: bold</string>
+               </property>
+               <property name="text">
+                <string>酷狗</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="platformBox_Qishui" native="true">
+            <property name="platformBox" stdset="0">
+             <bool>true</bool>
+            </property>
+            <layout class="QHBoxLayout" name="layout_platform_Qishui">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <property name="leftMargin">
+              <number>2</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>2</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="iconQishuiMusic">
+               <property name="maximumSize">
+                <size>
+                 <width>14</width>
+                 <height>14</height>
+                </size>
+               </property>
+               <property name="pixmap">
+                <pixmap resource="../../resource/resources.qrc">:/icons/qishui.ico</pixmap>
+               </property>
+               <property name="scaledContents">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="labelQishuiServer">
+               <property name="toolTip">
+                <string>汽水音乐本地服务器状态（红=未启动，绿=运行中）</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">color: #dc3545; font-size: 12px; font-weight: bold</string>
+               </property>
+               <property name="text">
+                <string>汽水</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_bottom">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="labelSongCount">
+         <property name="text">
+          <string>歌曲数量：0</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1100</width>
+     <height>23</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources>
+  <include location="../../resource/resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>
