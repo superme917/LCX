@@ -4,18 +4,18 @@
 
 #include "core/qishui_music.h"
 
-#include <QSslConfiguration>
-#include <QNetworkRequest>
-#include <QNetworkReply>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QJsonArray>
+#include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QSslConfiguration>
 #include <QTime>
+
 
 namespace LCX::core {
 
-QiShuiMusic::QiShuiMusic(QWidget *parent)
-    : BaseMusic(parent), network_manager_(new QNetworkAccessManager(this)) {}
+QiShuiMusic::QiShuiMusic(QWidget *parent) : BaseMusic(parent), network_manager_(new QNetworkAccessManager(this)) {}
 
 QiShuiMusic::~QiShuiMusic() {}
 void QiShuiMusic::importMusic(const QString &playlist_link) {
@@ -35,8 +35,9 @@ void QiShuiMusic::importMusic(const QString &playlist_link) {
     process_num_ = 0;
     emit songsNumberChanged(1, 0);
 
-    QString url =
-        QString("https://api.suol.cc/v1/music_qs.php?page=1000&action=playlist&id=%1&m_token=%2").arg(playlist_id).arg(token_);
+    QString url = QString("https://api.suol.cc/v1/music_qs.php?page=1000&action=playlist&id=%1&m_token=%2")
+                      .arg(playlist_id)
+                      .arg(token_);
     QNetworkRequest request;
     request.setUrl(QUrl(url));
 
@@ -44,8 +45,7 @@ void QiShuiMusic::importMusic(const QString &playlist_link) {
     connect(reply, &QNetworkReply::finished, this, &QiShuiMusic::onPlaylistReplyFinished);
 }
 
-void QiShuiMusic::onPlaylistReplyFinished()
-{
+void QiShuiMusic::onPlaylistReplyFinished() {
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     if (!reply) return;
 
@@ -67,8 +67,7 @@ void QiShuiMusic::onPlaylistReplyFinished()
     }
 }
 
-void QiShuiMusic::fetchLyric(const QString &id, int song_index)
-{
+void QiShuiMusic::fetchLyric(const QString &id, int song_index) {
     QString lyricUrl = QString("https://api.suol.cc/v1/music_qs.php?action=song&id=%1&m_token=%2").arg(id).arg(token_);
     QNetworkRequest lyricRequest;
     lyricRequest.setUrl(QUrl(lyricUrl));
@@ -94,9 +93,13 @@ void QiShuiMusic::fetchLyric(const QString &id, int song_index)
             }
         }
         process_num_++;
-        emit songsNumberChanged(songs_.size(), process_num_);
+        if (lyric_cleanup_enabled_) {
+            emit songsNumberChanged(2 * songs_.size(), process_num_);
+        } else {
+            emit songsNumberChanged(songs_.size(), process_num_);
+        }
         if (process_num_ == songs_.size()) {
-            emit taskFinished();
+            finishParsing();
         }
     });
 }

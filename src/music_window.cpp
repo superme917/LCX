@@ -4,9 +4,9 @@
 
 #include "music_window.h"
 #include "core/cloud_music.h"
-#include "core/qq_music.h"
 #include "core/kugou_music.h"
 #include "core/qishui_music.h"
+#include "core/qq_music.h"
 
 #include <ElaWidgetTools/ElaComboBox.h>
 #include <ElaWidgetTools/ElaLineEdit.h>
@@ -14,6 +14,7 @@
 #include <ElaWidgetTools/ElaMessageBar.h>
 #include <ElaWidgetTools/ElaProgressBar.h>
 #include <ElaWidgetTools/ElaPushButton.h>
+#include <ElaWidgetTools/ElaRadioButton.h>
 #include <ElaWidgetTools/ElaTableView.h>
 #include <ElaWidgetTools/ElaText.h>
 #include <ElaWidgetTools/ElaTheme.h>
@@ -107,13 +108,9 @@ MusicTableView::MusicTableView(QWidget* parent) : ElaTableView(parent) {
     });
 }
 
-bool MusicTableView::isFanyi() const {
-    return fanyi_->property("ElaIconType").toChar() == QChar(ElaIconType::Check);
-}
+bool MusicTableView::isFanyi() const { return fanyi_->property("ElaIconType").toChar() == QChar(ElaIconType::Check); }
 
-bool MusicTableView::isYinyi() const {
-    return yinyi_->property("ElaIconType").toChar() == QChar(ElaIconType::Check);
-}
+bool MusicTableView::isYinyi() const { return yinyi_->property("ElaIconType").toChar() == QChar(ElaIconType::Check); }
 
 void MusicTableView::contextMenuEvent(QContextMenuEvent* event) {
     auto context_idx = indexAt(event->pos());
@@ -146,6 +143,7 @@ MusicWindow::MusicWindow(QWidget* parent) : ElaScrollPage(parent) {
 
     ElaPushButton* importButton = new ElaPushButton("读取歌单", this);
     ElaPushButton* exportButton = new ElaPushButton("导出歌单", this);
+    deepseek_ = new ElaRadioButton("DeepSeek", this);
 
     music_table_view_ = new MusicTableView(this);
     QFont songListHeaderFont = music_table_view_->horizontalHeader()->font();
@@ -179,6 +177,7 @@ MusicWindow::MusicWindow(QWidget* parent) : ElaScrollPage(parent) {
     comboBoxLayout->addWidget(importProgress_);
     comboBoxLayout->addWidget(importProgressText_);
     comboBoxLayout->addStretch();
+    comboBoxLayout->addWidget(deepseek_);
 
     centerWidget_ = new QWidget(this);
     centerWidget_->setWindowTitle("MusicTool");
@@ -240,6 +239,7 @@ void MusicWindow::onImportButtomClicked() {
         connect(music_, &core::BaseMusic::errorOccurred, this, [this](const QString& error) {
             ElaMessageBar::warning(ElaMessageBarType::BottomRight, "警告", error, 2000, this);
         });
+        music_->setLyricCleanupEnabled(deepseek_->isChecked());
         music_->importMusic(playlistLinkStr);
     }
 }

@@ -133,12 +133,51 @@ void CloudMusic::importMusic(const QString &playlist_link) {
             songs_[index].has_rLyric = true;
         }
 
+        QVariantMap sheet_list = cloud_music_->sheet_list({{"id", song_id}});
+        auto sheet_data = sheet_list["body"].toMap()["data"].toMap()["musicSheetSimpleInfoVOS"].toList();
+        for (auto music_sheet : sheet_data) {
+            QVariantMap mus_sheet = music_sheet.toMap();
+            uint id = mus_sheet["id"].toUInt();
+            QString name = mus_sheet["name"].toString();
+            QString musicKey = mus_sheet["musicKey"].toString();
+            int bpm = mus_sheet["bpm"].toInt();
+            QString difficulty = mus_sheet["difficulty"].toString();
+            QString playVersion = mus_sheet["playVersion"].toString();
+            int totalPageSize = mus_sheet["totalPageSize"].toInt();
+            int type_code = mus_sheet["type"].toList()[0].toMap()["code"].toInt();
+            QString type_name = mus_sheet["type"].toList()[0].toMap()["name"].toString();
+            Sheet new_sheet;
+            new_sheet.id = id;
+            new_sheet.description += name;
+            new_sheet.description += (name.isEmpty() ? "" : "-");
+            new_sheet.description += musicKey;
+            new_sheet.description += (musicKey.isEmpty() ? "" : "调-");
+            if (bpm > 0) {
+                new_sheet.description += "BPM ";
+                new_sheet.description += QString::number(bpm);
+                new_sheet.description += "-";
+            }
+            new_sheet.description += difficulty;
+            new_sheet.description += (difficulty.isEmpty() ? "" : "难度-");
+            new_sheet.description += playVersion;
+            new_sheet.description += (playVersion.isEmpty() ? "" : "-");
+            new_sheet.description += QString::number(totalPageSize);
+            new_sheet.description += (totalPageSize ? "页" : "");
+            new_sheet.type_code = type_code;
+            new_sheet.type_name = type_name;
+            songs_[index].sheet[id].push_back(new_sheet);
+        }
+
         // 发送歌词解析进度信号
         process_.store(process_.load() + 1);
-        emit songsNumberChanged(songs_.size(), process_);
+        if (lyric_cleanup_enabled_) {
+            emit songsNumberChanged(2 * songs_.size(), process_);
+        } else {
+            emit songsNumberChanged(songs_.size(), process_);
+        }
     });
     // 发送任务完成信号
-    emit taskFinished();
+    finishParsing();
 }
 
 }  // namespace LCX::core

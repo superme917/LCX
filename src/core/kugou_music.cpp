@@ -163,9 +163,13 @@ void KuGouMusic::fetchLyric(const QString &hash, const QString &keywords, int du
             }
 
             process_num_++;
-            emit songsNumberChanged(songs_.size(), process_num_);
+            if (lyric_cleanup_enabled_) {
+                emit songsNumberChanged(2 * songs_.size(), process_num_);
+            } else {
+                emit songsNumberChanged(songs_.size(), process_num_);
+            }
             if (process_num_ == songs_.size()) {
-                emit taskFinished();
+                finishParsing();
             }
         });
     });

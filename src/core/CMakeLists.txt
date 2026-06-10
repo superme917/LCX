@@ -9,5 +9,9 @@ add_library(${PROJECT_NAME}.core STATIC
     kugou_music.h
     qishui_music.cpp
     qishui_music.h
+    deepseek_client.cpp
+    deepseek_client.h
+    deepseek_lyric_cleaner.cpp
+    deepseek_lyric_cleaner.h
 )
 target_link_libraries(${PROJECT_NAME}.core PUBLIC ${LIBS})

@@ -254,11 +254,15 @@ void QQMusic::onProcessReadyRead() {
 
         // 发送歌词解析进度信号
         current_song_idx++;
-        emit songsNumberChanged(songs_.size(), current_song_idx);
+        if (lyric_cleanup_enabled_) {
+            emit songsNumberChanged(2 * songs_.size(), current_song_idx);
+        } else {
+            emit songsNumberChanged(songs_.size(), current_song_idx);
+        }
     }
     // 发送任务完成信号
     if (current_song_idx == songs_.size()) {
-        emit taskFinished();
+        finishParsing();
     }
 }
 

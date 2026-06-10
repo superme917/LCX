@@ -16,6 +16,7 @@ class ElaComboBox;
 class ElaLineEdit;
 class ElaProgressBar;
 class ElaMenu;
+class ElaRadioButton;
 
 namespace LCX {
 
@@ -116,6 +117,7 @@ private:
     ExportWaitDialog *exportWaitDialog_{nullptr};  // word导出进度窗口
     io::WordExport *word_export_{nullptr};         // word导出对象
     core::BaseMusic *music_{nullptr};              // 音乐解析抽象类
+    ElaRadioButton *deepseek_{nullptr};
 };
 
 }  // namespace LCX
