@@ -138,9 +138,10 @@ void QQMusic::onProcessReadyRead() {
         for (int i = 0; i < songs.size(); ++i) {
             // 获取歌曲信息，并填入songs_
             QJsonObject song = songs[i].toObject();
-            QJsonArray singers = song["singer"].toArray();   // 歌手
-            QString name = song["name"].toString();          // 歌名
-            int song_id = song["id"].toInt();                // 歌曲ID
+            QJsonArray singers = song["singer"].toArray();  // 歌手
+            QString name = song["name"].toString();         // 歌名
+            QString song_id = song["mid"].toString();       // 歌曲ID
+            int song_type = song["type"].toInt();
             int duration = song["interval"].toInt() * 1000;  // 歌曲时长
 
             QString singer;
@@ -151,6 +152,7 @@ void QQMusic::onProcessReadyRead() {
 
             QJsonObject params;
             params["id"] = song_id;
+            params["song_type"] = song_type;
             sendCommand("lyric", params);
 
             songs_[i].singer = singer;
@@ -161,6 +163,7 @@ void QQMusic::onProcessReadyRead() {
     } else if (cmd == "lyric") {
         // 解析原始歌词，填入songs_
         QString lyric = doc["data"].toObject()["lyric"].toString();
+        qDebug() << lyric;
         QStringList lines = lyric.split('\n', Qt::SkipEmptyParts);
         std::vector<std::pair<int, QString>> unsynced_lyric;
         for (const QString &line : lines) {

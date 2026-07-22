@@ -1,10 +1,28 @@
 """Comment API 返回模型定义."""
 
+from enum import IntEnum
 from typing import Any
 
 from pydantic import Field
 
 from .request import Response
+
+
+class CommentBizType(IntEnum):
+    """评论业务分类.
+
+    + SONG: 单曲评论.
+    + ALBUM: 专辑评论.
+    + PLAYLIST: 歌单评论.
+    + MV: 音乐视频(MV)评论.
+    + SPECIAL_AUDIO: 特殊音频/长音频等评论.
+    """
+
+    SONG = 1
+    ALBUM = 2
+    PLAYLIST = 3
+    MV = 4
+    SPECIAL_AUDIO = 15
 
 
 class IconTextInfo(Response):
@@ -85,29 +103,29 @@ class CommentItem(Response):
         sub_comments: 子评论列表.
     """
 
-    cmid: str = Field(alias="CmId")
-    seq_no: str = Field(alias="SeqNo")
-    nick: str = Field(alias="Nick")
-    avatar: str = Field(alias="Avatar")
-    encrypt_uin: str = Field(alias="EncryptUin")
-    content: str = Field(alias="Content")
-    pub_time: int = Field(alias="PubTime")
-    praise_num: int = Field(alias="PraiseNum")
-    reply_cnt: int = Field(alias="ReplyCnt")
-    is_praised: int = Field(alias="IsPraised")
-    is_self: int = Field(alias="IsSelf")
-    state: int = Field(alias="State")
-    hot_score: str = Field(alias="HotScore")
-    rec_score: str = Field(alias="RecScore")
-    song_id: int = Field(alias="SongId")
-    song_name: str = Field(alias="SongName")
-    singer_names: str = Field(alias="SingerNames")
-    song_ts_elems: list[dict[str, Any]] = Field(default_factory=list, alias="SongTsElems")
-    hash_tag_list: list[dict[str, Any]] = Field(default_factory=list, alias="HashTagList")
-    little_tails: list[dict[str, Any]] = Field(default_factory=list, alias="LittleTails")
-    icon_list: list[dict[str, Any]] = Field(default_factory=list, alias="IconList")
-    vip_ui: dict[str, Any] = Field(default_factory=dict, alias="VipUI")
-    sub_comments: list[dict[str, Any]] = Field(default_factory=list, alias="SubComments")
+    cmid: str = Field(validation_alias="CmId")
+    seq_no: str = Field(validation_alias="SeqNo")
+    nick: str = Field(validation_alias="Nick")
+    avatar: str = Field(validation_alias="Avatar")
+    encrypt_uin: str = Field(validation_alias="EncryptUin")
+    content: str = Field(validation_alias="Content")
+    pub_time: int = Field(validation_alias="PubTime")
+    praise_num: int = Field(validation_alias="PraiseNum")
+    reply_cnt: int = Field(validation_alias="ReplyCnt")
+    is_praised: int = Field(validation_alias="IsPraised")
+    is_self: int = Field(validation_alias="IsSelf")
+    state: int = Field(validation_alias="State")
+    hot_score: str = Field(validation_alias="HotScore")
+    rec_score: str = Field(validation_alias="RecScore")
+    song_id: int = Field(validation_alias="SongId")
+    song_name: str = Field(validation_alias="SongName")
+    singer_names: str = Field(validation_alias="SingerNames")
+    song_ts_elems: list[dict[str, Any]] = Field(default_factory=list, validation_alias="SongTsElems")
+    hash_tag_list: list[dict[str, Any]] = Field(default_factory=list, validation_alias="HashTagList")
+    little_tails: list[dict[str, Any]] = Field(default_factory=list, validation_alias="LittleTails")
+    icon_list: list[dict[str, Any]] = Field(default_factory=list, validation_alias="IconList")
+    vip_ui: dict[str, Any] = Field(default_factory=dict, validation_alias="VipUI")
+    sub_comments: list[dict[str, Any]] = Field(default_factory=list, validation_alias="SubComments")
 
 
 class CommentListResponse(Response):
@@ -136,13 +154,13 @@ class CommentListResponse(Response):
     has_more: int = Field(json_schema_extra={"jsonpath": "$.CommentList.HasMore"})
     next_offset: int = Field(json_schema_extra={"jsonpath": "$.CommentList.NextOffset"})
     total: int = Field(json_schema_extra={"jsonpath": "$.CommentList.Total"})
-    total_cm_num: int = Field(alias="TotalCmNum")
-    comment_tip: str = Field(alias="CommentTip")
-    comment_h5_page: str = Field(alias="CommentH5Page")
-    has_ts_cm: int = Field(alias="HasTsCm")
-    share_cnt: int = Field(alias="ShareCnt")
-    msg: str = Field(alias="Msg")
-    sub_code: int = Field(alias="SubCode")
+    total_cm_num: int = Field(validation_alias="TotalCmNum")
+    comment_tip: str = Field(validation_alias="CommentTip")
+    comment_h5_page: str = Field(validation_alias="CommentH5Page")
+    has_ts_cm: int = Field(validation_alias="HasTsCm")
+    share_cnt: int = Field(validation_alias="ShareCnt")
+    msg: str = Field(validation_alias="Msg")
+    sub_code: int = Field(validation_alias="SubCode")
 
 
 class MomentCommentItem(Response):
@@ -167,22 +185,22 @@ class MomentCommentItem(Response):
         little_tails: 尾巴挂件列表.
     """
 
-    cmid: str = Field(alias="CmId")
-    seq_no: str = Field(alias="SeqNo")
-    content: str = Field(alias="Content")
-    encrypt_uin: str = Field(alias="EncryptUin")
-    pub_time: int = Field(alias="PubTime")
-    praise_num: int = Field(alias="PraiseNum")
-    reply_cnt: int = Field(alias="ReplyCnt")
-    state: int = Field(alias="State")
-    is_self: int = Field(alias="IsSelf")
-    location: str = Field(alias="Location")
-    phone_type: str = Field(alias="PhoneType")
-    pic: str = Field(alias="Pic")
-    pic_size: str = Field(alias="PicSize")
-    song_ts_elems: list[dict[str, Any]] = Field(default_factory=list, alias="SongTsElems")
-    hash_tag_list: list[dict[str, Any]] = Field(default_factory=list, alias="HashTagList")
-    little_tails: list[dict[str, Any]] = Field(default_factory=list, alias="LittleTails")
+    cmid: str = Field(validation_alias="CmId")
+    seq_no: str = Field(validation_alias="SeqNo")
+    content: str = Field(validation_alias="Content")
+    encrypt_uin: str = Field(validation_alias="EncryptUin")
+    pub_time: int = Field(validation_alias="PubTime")
+    praise_num: int = Field(validation_alias="PraiseNum")
+    reply_cnt: int = Field(validation_alias="ReplyCnt")
+    state: int = Field(validation_alias="State")
+    is_self: int = Field(validation_alias="IsSelf")
+    location: str = Field(validation_alias="Location")
+    phone_type: str = Field(validation_alias="PhoneType")
+    pic: str = Field(validation_alias="Pic")
+    pic_size: str = Field(validation_alias="PicSize")
+    song_ts_elems: list[dict[str, Any]] = Field(default_factory=list, validation_alias="SongTsElems")
+    hash_tag_list: list[dict[str, Any]] = Field(default_factory=list, validation_alias="HashTagList")
+    little_tails: list[dict[str, Any]] = Field(default_factory=list, validation_alias="LittleTails")
 
 
 class MomentCommentResponse(Response):
@@ -198,8 +216,28 @@ class MomentCommentResponse(Response):
     """
 
     comments: list[MomentCommentItem] = Field(default_factory=list, json_schema_extra={"jsonpath": "$.CmList[*]"})
-    has_more: int = Field(alias="HasMore")
-    next_pos: str = Field(default="", alias="NextPos")
-    hint: str = Field(alias="Hint")
-    prev_list_loaded: int = Field(alias="PrevListLoaded")
-    map_cm_ext: dict[str, dict[str, Any]] = Field(default_factory=dict, alias="MapCmExt")
+    has_more: int = Field(validation_alias="HasMore")
+    next_pos: str = Field(default="", validation_alias="NextPos")
+    hint: str = Field(validation_alias="Hint")
+    prev_list_loaded: int = Field(validation_alias="PrevListLoaded")
+    map_cm_ext: dict[str, dict[str, Any]] = Field(default_factory=dict, validation_alias="MapCmExt")
+
+
+class AddCommentResponse(Response):
+    """添加评论接口的响应体.
+
+    Attributes:
+        subcode: 响应子代码.
+        msg: 响应消息.
+        id: 新增评论 ID.
+        parent: 父评论 ID.
+        floor: 楼层号.
+        verify_url: 验证码 URL (如果需要).
+    """
+
+    subcode: int = Field(validation_alias="SubCode")
+    msg: str = Field(validation_alias="Msg")
+    id: str = Field(validation_alias="AddedCmId")
+    parent: str = Field(validation_alias="ParentCmId")
+    floor: int = Field(json_schema_extra={"jsonpath": "$.Floor.Num"})
+    verify_url: str = Field(validation_alias="VerifyUrl")

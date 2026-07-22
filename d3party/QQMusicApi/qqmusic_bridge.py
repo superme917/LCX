@@ -67,9 +67,10 @@ async def main():
                 result = await client.songlist.get_detail(songlist_id=songlist_id, onlysong=True, num=1000)
                 response = {"code": 0, "data": to_dict(result)}
             elif cmd == "lyric":
-                song_id = int(params.get("id"))
-                result = await client.lyric.get_lyric(value=song_id, trans=True, roma=True)
-                response = {"code": 0, "data": to_dict(result.decrypt())}
+                song_id = params.get("id")
+                type = int(params.get("song_type"))
+                result = await client.lyric.get_lyric(value=song_id, song_type=type, trans=True, roma=True)
+                response = {"code": 0, "data": to_dict(result)}
             else:
                 response = {"code": -1, "error": f"Unknown command: {cmd}"}
 

@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import Field
 
-from .base import MV
+from .base import MV, Singer
 from .request import Response
 
 
@@ -87,9 +87,9 @@ class MvUrlItem(Response):
     code: int
     filetype: int
     m3u8: str
-    new_file_type: int = Field(alias="newFileType")
+    new_file_type: int = Field(validation_alias="newFileType")
     format: int
-    file_size: int = Field(alias="fileSize")
+    file_size: int = Field(validation_alias="fileSize")
 
 
 class MvUrlSet(Response):
@@ -116,3 +116,35 @@ class GetMvUrlsResponse(Response):
     """
 
     data: dict[str, MvUrlSet] = Field(json_schema_extra={"jsonpath": "$"})
+
+
+class MvListItem(MV):
+    """MV 分类列表中的单个 MV 摘要.
+
+    Attributes:
+        singers: 歌手列表.
+        subtitle: MV 副标题.
+        playcnt: 播放量.
+        pubdate: 发布时间戳.
+        duration: 时长 (秒).
+        picurl: 封面图片地址.
+    """
+
+    singers: list[Singer] = Field(default_factory=list)
+    subtitle: str = ""
+    playcnt: int = 0
+    pubdate: int = 0
+    duration: int = 0
+    picurl: str = ""
+
+
+class GetMvListResponse(Response):
+    """MV 分类列表接口的响应体.
+
+    Attributes:
+        total: 该分类条件下的 MV 总数.
+        items: 当前页 MV 列表.
+    """
+
+    total: int = 0
+    items: list[MvListItem] = Field(default_factory=list, validation_alias="list")

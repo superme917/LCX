@@ -17,6 +17,7 @@ from ..models.recommend import (
     RecommendNewSongResponse,
     RecommendSonglistResponse,
 )
+from ..models.request import Credential
 from ._base import ApiModule
 
 
@@ -82,8 +83,12 @@ class RecommendApi(ApiModule):
             ),
         )
 
-    def get_guess_recommend(self):
-        """获取猜你喜欢推荐."""
+    def get_guess_recommend(self, *, credential: Credential | None = None):
+        """获取猜你喜欢推荐.
+
+        Tips:
+            请求平台非 `Platform.ANDROID` 时, 需要提供有效的 `Credential`.
+        """
         data = {
             "id": 99,
             "num": 5,
@@ -96,6 +101,7 @@ class RecommendApi(ApiModule):
             "get_radio_track",
             data,
             response_model=GuessRecommendResponse,
+            credential=credential,
         )
 
     def get_radar_recommend(self, page: int = 1):
@@ -140,9 +146,13 @@ class RecommendApi(ApiModule):
             ),
         )
 
-    def get_recommend_newsong(self):
-        """获取推荐新歌."""
-        data = {"type": 5}
+    def get_recommend_newsong(self, type: int = 5):  # noqa: A002
+        """获取推荐新歌.
+
+        Args:
+            type: 地区/语种筛选. 1=内地, 2=欧美, 3=日本, 4=韩国, 5=最新, 6=港台.
+        """
+        data = {"type": type}
         return self._build_request(
             "newsong.NewSongServer",
             "get_new_song_info",

@@ -1,6 +1,6 @@
 """Album API 返回模型定义."""
 
-from pydantic import Field, field_validator
+from pydantic import Field
 
 from .base import Album, Singer, Song
 from .request import Response
@@ -20,10 +20,10 @@ class AlbumDetail(Album):
     """
 
     subtitle: str = ""
-    time_public: str = Field(default="", alias="publishDate")
+    time_public: str = Field(default="", validation_alias="publishDate")
     desc: str = ""
     language: str = ""
-    album_type: str = Field(default="", alias="albumType")
+    album_type: str = Field(default="", validation_alias="albumType")
     genre: str = ""
     wikiurl: str = ""
 
@@ -38,9 +38,9 @@ class AlbumCompany(Response):
         brief: 公司简介.
     """
 
-    id: int = Field(alias="ID")
+    id: int = Field(validation_alias="ID")
     name: str
-    is_show: int = Field(alias="isShow")
+    is_show: int = Field(validation_alias="isShow")
     brief: str = ""
 
 
@@ -53,7 +53,7 @@ class GetAlbumDetailResponse(Response):
         singers: 专辑署名歌手列表.
     """
 
-    album: AlbumDetail = Field(alias="basicInfo")
+    album: AlbumDetail = Field(validation_alias="basicInfo")
     company: AlbumCompany
     singers: list[Singer] = Field(default_factory=list, json_schema_extra={"jsonpath": "$.singer.singerList"})
 
@@ -67,12 +67,55 @@ class GetAlbumSongResponse(Response):
         song_list: 当前响应携带的专辑歌曲列表.
     """
 
-    album_mid: str = Field(alias="albumMid")
-    total_num: int = Field(alias="totalNum")
+    album_mid: str = Field(validation_alias="albumMid")
+    total_num: int = Field(validation_alias="totalNum")
     song_list: list[Song] = Field(default_factory=list, json_schema_extra={"jsonpath": "$.songList[*].songInfo"})
 
-    @field_validator("song_list", mode="before")
-    @classmethod
-    def _coerce_song_list(cls, value: list[dict] | dict) -> list[dict]:
-        """将上游返回的单个歌曲信息统一规整为列表."""
-        return [value] if isinstance(value, dict) else value
+
+class NewAlbumItem(Album):
+    """新碟上架列表中的单张专辑摘要.
+
+    Attributes:
+        singers: 专辑署名歌手列表.
+        release_time: 发行日期, 格式通常为 YYYY-MM-DD.
+        type: 专辑类型.
+        area: 地区标识.
+        genre: 流派标识.
+        language: 语种标识.
+    """
+
+    singers: list[Singer] = Field(default_factory=list)
+    release_time: str = ""
+    type: int = 0
+    area: int = 0
+    genre: int = 0
+    language: int = 0
+
+
+class GetNewAlbumResponse(Response):
+    """新碟上架接口的响应体.
+
+    Attributes:
+        total: 该地区下新碟总数.
+        albums: 当前页新碟列表.
+    """
+
+    total: int = 0
+    albums: list[NewAlbumItem] = Field(default_factory=list)
+
+
+class AlbumFavWriteResponse(Response):
+    """收藏 / 取消收藏专辑的写操作响应.
+
+    Attributes:
+        result: 操作结果码, 0 表示成功.
+        failed_album_id: 操作失败的专辑 ID 列表, 全部成功时为空.
+    """
+
+    result: int = 0
+    failed_album_id: list[int] = Field(default_factory=list, validation_alias="v_failedAlbumId")
+
+    @property
+    def success(self) -> bool:
+        """是否操作成功 (result 为 0 且无失败项)."""
+        return self.result == 0 and not self.failed_album_id

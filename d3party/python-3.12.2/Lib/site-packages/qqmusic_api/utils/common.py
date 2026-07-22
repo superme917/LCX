@@ -3,6 +3,7 @@
 import hashlib
 import random
 import time
+import uuid
 from functools import lru_cache
 from typing import Any
 
@@ -38,7 +39,7 @@ def get_guid() -> str:
     Returns:
         str: 32 位随机 GUID 字符串.
     """
-    return "".join(random.choices("abcdef1234567890", k=32))
+    return uuid.uuid4().hex
 
 
 def hash33(s: str, h: int = 0) -> int:
@@ -73,25 +74,38 @@ def get_searchID() -> str:
 def bool_to_int(data: Any) -> Any:
     """递归将数据结构中的 bool 值转换为 int (0 或 1).
 
-    无 bool 值时原样返回, 避免不必要的容器重建.
-
     Args:
         data: 待转换的数据, 支持基本类型、列表及字典.
 
     Returns:
-        Any: 转换后的数据结构, 无 bool 值时原样返回.
+        Any: 转换后的数据结构. 如果内容无变动, 则返回原对象引用.
     """
-    if isinstance(data, bool):
-        return int(data)
-    if isinstance(data, dict):
-        if not any(isinstance(v, (bool, dict, list)) for v in data.values()):
+    match data:
+        case bool():
+            return int(data)
+
+        case list():
+            changed = False
+            new_list = []
+            for item in data:
+                new_item = bool_to_int(item)
+                if new_item is not item:
+                    changed = True
+                new_list.append(new_item)
+            return new_list if changed else data
+
+        case dict():
+            changed = False
+            new_dict = {}
+            for k, v in data.items():
+                new_v = bool_to_int(v)
+                if new_v is not v:
+                    changed = True
+                new_dict[k] = new_v
+            return new_dict if changed else data
+
+        case _:
             return data
-        return {k: bool_to_int(v) for k, v in data.items()}
-    if isinstance(data, list):
-        if not any(isinstance(v, (bool, dict, list)) for v in data):
-            return data
-        return [bool_to_int(v) for v in data]
-    return data
 
 
 @lru_cache(maxsize=256)

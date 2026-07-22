@@ -45,6 +45,8 @@ class CommonParams(BaseModel):
     udid: str | None = Field(default=None)
     aid: str | None = Field(default=None)
     guid: str | None = Field(default=None)
+    uid: str | None = Field(default=None)
+    sid: str | None = Field(default=None)
     os_ver: str | None = Field(default=None)
     phonetype: str | None = Field(default=None)
     devicelevel: str | None = Field(default=None)
@@ -102,7 +104,10 @@ class Credential(BaseModel):
         if "loginType" in data or "login_type" in data:
             return data
 
-        musickey = data.get("musickey", "")
+        musickey = data.get("musickey")
+        if not musickey:
+            return data
+
         inferred_login_type = 1 if isinstance(musickey, str) and musickey.startswith("W_X") else 2
         return {**data, "loginType": inferred_login_type}
 
@@ -120,6 +125,7 @@ class RequestItem(TypedDict):
     module: str
     method: str
     param: dict[str, Any] | dict[int, Any]
+    preserve_bool: bool
 
 
 class JceRequestItem(Struct):
@@ -133,7 +139,7 @@ class JceRequestItem(Struct):
 class JceRequest(Struct):
     """JCE 请求体."""
 
-    comm: dict[str, Any] = field(tag=0)
+    comm: dict[str, str] = field(tag=0)
     data: dict[str, JceRequestItem] = field(tag=1)
 
 
@@ -175,9 +181,14 @@ class Response(BaseModel):
                 matches = jsonpath_expr.find(data)
 
                 if matches:
-                    if len(matches) == 1:
-                        processed_data[target_key] = matches[0].value
+                    values = [match.value for match in matches]
+                    if "[*]" in jsonpath_expr_str:
+                        # 通配符路径表示提取条目列表, 即使仅命中一条也保持列表,
+                        # 兼容上游在仅有一条数据时直接返回对象而非数组的行为.
+                        processed_data[target_key] = values
+                    elif len(values) == 1:
+                        processed_data[target_key] = values[0]
                     else:
-                        processed_data[target_key] = [match.value for match in matches]
+                        processed_data[target_key] = values
 
         return processed_data

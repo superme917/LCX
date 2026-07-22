@@ -2,9 +2,7 @@
 
 from typing import TYPE_CHECKING, Any, overload
 
-import httpx
-
-from ..core.exceptions import NotLoginError
+from ..core.exceptions import CredentialInvalidError
 from ..core.versioning import Platform
 
 if TYPE_CHECKING:
@@ -12,7 +10,7 @@ if TYPE_CHECKING:
 
     from ..core.client import Client
     from ..core.pagination import PagerMeta, RefreshMeta
-    from ..core.request import PaginatedRequest, RefreshableRequest, Request, ResponseModel
+    from ..core.request import AllowErrorCodes, PaginatedRequest, RefreshableRequest, Request, ResponseModel
     from ..models.request import Credential
 
 
@@ -21,6 +19,7 @@ class ApiModule:
 
     def __init__(self, client: "Client") -> None:
         self._client = client
+        self._session = client._session
 
     def _require_login(self, credential: "Credential | None" = None):
         """获取并校验登录凭证.
@@ -32,45 +31,12 @@ class ApiModule:
             Credential: 校验通过的凭证对象.
 
         Raises:
-            NotLoginError: 如果凭证中缺少必要的 musicid 或 musickey.
+            CredentialInvalidError: 如果凭证中缺少必要的 musicid 或 musickey.
         """
         target_credential = credential or self._client.credential
         if not target_credential.musicid or not target_credential.musickey:
-            raise NotLoginError("接口需要有效登录凭证")
+            raise CredentialInvalidError("接口需要有效登录凭证")
         return target_credential
-
-    def _extract_cookies(self, response: httpx.Response):
-        """从响应中提取 Cookie.
-
-        Args:
-            response: HTTP 响应对象.
-
-        Returns:
-            httpx.Cookies: 提取到的 Cookie 容器.
-        """
-        temp_cookies = httpx.Cookies()
-
-        temp_cookies.extract_cookies(response)
-        return temp_cookies
-
-    def _get_cookies(self, credential: "Credential | None" = None) -> dict[str, str]:
-        """从 Credential 提取 Cookies.
-
-        Args:
-            credential: 用户凭证对象.
-
-        Returns:
-            dict[str, str]: 包含常用 Cookie 字段的字典.
-        """
-        auth: dict[str, str] = {}
-        cred = credential or self._client.credential
-        if cred.musicid:
-            auth["uin"] = str(cred.musicid)
-            auth["qqmusic_uin"] = str(cred.musicid)
-        if cred.musickey:
-            auth["qm_keyst"] = cred.musickey
-            auth["qqmusic_key"] = cred.musickey
-        return auth
 
     async def _request(
         self,
@@ -78,8 +44,10 @@ class ApiModule:
         url: str,
         credential: "Credential | None" = None,
         platform: Platform | None = None,
+        *,
+        lazy: bool = False,
         **kwargs: Any,
-    ) -> httpx.Response:
+    ):
         """发送请求并自动携带对应凭证与平台 User-Agent.
 
         Args:
@@ -87,6 +55,7 @@ class ApiModule:
             url: 目标 URL.
             credential: 请求凭证 (默认使用客户端凭证).
             platform: 请求平台 (默认使用客户端平台).
+            lazy: 是否延迟发送请求.
             **kwargs: 透传给底层客户端的参数.
 
         Returns:
@@ -97,19 +66,14 @@ class ApiModule:
             url=url,
             credential=credential,
             platform=platform,
+            lazy=lazy,
             **kwargs,
         )
 
     def _build_query_common_params(self, platform: Platform | None = None) -> dict[str, int]:
-        """构建查询接口使用的通用版本参数.
-
-        Args:
-            platform: 目标平台.
-
-        Returns:
-            dict[str, int]: 包含版本信息的常用查询参数.
-        """
-        return self._client._version_policy.build_query_params(platform or self._client.platform)
+        """构建查询接口使用的通用版本参数."""
+        profile = self._client._version_policy.get_profile(platform or self._client.platform)
+        return {"ct": profile.ct, "cv": profile.cv}
 
     @overload
     def _build_request(
@@ -120,12 +84,17 @@ class ApiModule:
         response_model: None = None,
         comm: dict[str, Any] | None = None,
         *,
+        override_comm: bool = False,
         is_jce: bool = False,
         preserve_bool: bool = False,
         credential: "Credential | None" = None,
         platform: Platform | None = None,
+        allow_error_codes: "AllowErrorCodes | None" = None,
+        parse_on_allow: bool = False,
         pager_meta: None = None,
         refresh_meta: None = None,
+        sign: bool = False,
+        require_login: bool = False,
     ) -> "Request[dict[str, Any]]": ...
 
     @overload
@@ -137,12 +106,17 @@ class ApiModule:
         response_model: None = None,
         comm: dict[str, Any] | None = None,
         *,
+        override_comm: bool = False,
         is_jce: bool = False,
         preserve_bool: bool = False,
         credential: "Credential | None" = None,
         platform: Platform | None = None,
+        allow_error_codes: "AllowErrorCodes | None" = None,
+        parse_on_allow: bool = False,
         pager_meta: "PagerMeta",
         refresh_meta: None = None,
+        sign: bool = False,
+        require_login: bool = False,
     ) -> "PaginatedRequest[dict[str, Any]]": ...
 
     @overload
@@ -154,12 +128,17 @@ class ApiModule:
         response_model: None = None,
         comm: dict[str, Any] | None = None,
         *,
+        override_comm: bool = False,
         is_jce: bool = False,
         preserve_bool: bool = False,
         credential: "Credential | None" = None,
         platform: Platform | None = None,
+        allow_error_codes: "AllowErrorCodes | None" = None,
+        parse_on_allow: bool = False,
         pager_meta: None = None,
         refresh_meta: "RefreshMeta",
+        sign: bool = False,
+        require_login: bool = False,
     ) -> "RefreshableRequest[dict[str, Any]]": ...
 
     @overload
@@ -171,12 +150,17 @@ class ApiModule:
         response_model: None = None,
         comm: dict[str, Any] | None = None,
         *,
+        override_comm: bool = False,
         is_jce: bool = True,
         preserve_bool: bool = False,
         credential: "Credential | None" = None,
         platform: Platform | None = None,
+        allow_error_codes: "AllowErrorCodes | None" = None,
+        parse_on_allow: bool = False,
         pager_meta: None = None,
         refresh_meta: None = None,
+        sign: bool = False,
+        require_login: bool = False,
     ) -> "Request[TarsDict]": ...
 
     @overload
@@ -188,12 +172,17 @@ class ApiModule:
         response_model: None = None,
         comm: dict[str, Any] | None = None,
         *,
+        override_comm: bool = False,
         is_jce: bool = True,
         preserve_bool: bool = False,
         credential: "Credential | None" = None,
         platform: Platform | None = None,
+        allow_error_codes: "AllowErrorCodes | None" = None,
+        parse_on_allow: bool = False,
         pager_meta: "PagerMeta",
         refresh_meta: None = None,
+        sign: bool = False,
+        require_login: bool = False,
     ) -> "PaginatedRequest[TarsDict]": ...
 
     @overload
@@ -205,12 +194,17 @@ class ApiModule:
         response_model: None = None,
         comm: dict[str, Any] | None = None,
         *,
+        override_comm: bool = False,
         is_jce: bool = True,
         preserve_bool: bool = False,
         credential: "Credential | None" = None,
         platform: Platform | None = None,
+        allow_error_codes: "AllowErrorCodes | None" = None,
+        parse_on_allow: bool = False,
         pager_meta: None = None,
         refresh_meta: "RefreshMeta",
+        sign: bool = False,
+        require_login: bool = False,
     ) -> "RefreshableRequest[TarsDict]": ...
 
     @overload
@@ -222,12 +216,17 @@ class ApiModule:
         response_model: type["ResponseModel"],
         comm: dict[str, Any] | None = None,
         *,
+        override_comm: bool = False,
         is_jce: bool = False,
         preserve_bool: bool = False,
         credential: "Credential | None" = None,
         platform: Platform | None = None,
+        allow_error_codes: "AllowErrorCodes | None" = None,
+        parse_on_allow: bool = False,
         pager_meta: None = None,
         refresh_meta: None = None,
+        sign: bool = False,
+        require_login: bool = False,
     ) -> "Request[ResponseModel]": ...
 
     @overload
@@ -239,12 +238,17 @@ class ApiModule:
         response_model: type["ResponseModel"],
         comm: dict[str, Any] | None = None,
         *,
+        override_comm: bool = False,
         is_jce: bool = False,
         preserve_bool: bool = False,
         credential: "Credential | None" = None,
         platform: Platform | None = None,
+        allow_error_codes: "AllowErrorCodes | None" = None,
+        parse_on_allow: bool = False,
         pager_meta: "PagerMeta",
         refresh_meta: None = None,
+        sign: bool = False,
+        require_login: bool = False,
     ) -> "PaginatedRequest[ResponseModel]": ...
 
     @overload
@@ -256,12 +260,17 @@ class ApiModule:
         response_model: type["ResponseModel"],
         comm: dict[str, Any] | None = None,
         *,
+        override_comm: bool = False,
         is_jce: bool = False,
         preserve_bool: bool = False,
         credential: "Credential | None" = None,
         platform: Platform | None = None,
+        allow_error_codes: "AllowErrorCodes | None" = None,
+        parse_on_allow: bool = False,
         pager_meta: None = None,
         refresh_meta: "RefreshMeta",
+        sign: bool = False,
+        require_login: bool = False,
     ) -> "RefreshableRequest[ResponseModel]": ...
 
     def _build_request(
@@ -272,32 +281,52 @@ class ApiModule:
         response_model: type["ResponseModel"] | None = None,
         comm: dict[str, Any] | None = None,
         *,
+        override_comm: bool = False,
         is_jce: bool = False,
         preserve_bool: bool = False,
         credential: "Credential | None" = None,
         platform: Platform | None = None,
+        allow_error_codes: "AllowErrorCodes | None" = None,
+        parse_on_allow: bool = False,
         pager_meta: "PagerMeta | None" = None,
         refresh_meta: "RefreshMeta | None" = None,
+        sign: bool = False,
+        require_login: bool = False,
     ) -> "Request[Any] | PaginatedRequest[Any] | RefreshableRequest[Any]":
         """构建可 await 的请求描述符.
 
         Args:
-            module: 接口所属模块名.
-            method: 接口方法名.
-            param: 业务参数字典.
-            response_model: 响应数据模型类, 用于自动解析结果.
-            comm: 公共参数字典.
-            is_jce: 是否使用 JCE 协议.
-            preserve_bool: 是否保留 JSON 参数中的布尔字面量.
-            credential: 指定请求凭证.
-            platform: 指定请求平台.
-            pager_meta: 连续翻页元数据声明.
-            refresh_meta: 换一批元数据声明.
+            module: 接口所属的模块名称.
+            method: 接口调用的方法名称.
+            param: 请求的核心业务参数.
+            response_model: 用于解析响应数据的 Pydantic 模型.
+            comm: 附加的通用请求参数. 行为受 `override_comm` 影响.
+            override_comm: 为 True 时, `comm` 将彻底替代自动生成的参数; 为 False 时, 将与生成参数进行合并更新.
+            is_jce: 是否作为 JCE (Tars) 请求发送.
+            preserve_bool: 是否保留布尔值原样 (默认转为 0/1 整型).
+            credential: 本次请求专用的凭证. 默认使用客户端当前凭证.
+            platform: 本次请求的平台标识. 默认使用客户端所属平台.
+            allow_error_codes: 允许放行的业务非零错误码.
+            parse_on_allow: 为 True 时, 匹配 `allow_error_codes` 的响应仍走模型解析而非返回原始字典.
+            pager_meta: 分页组件元数据. 提供后则升级为 `PaginatedRequest`.
+            refresh_meta: 刷新组件元数据. 提供后则升级为 `RefreshableRequest`.
+            sign: 是否对请求进行签名.
+            require_login: 为 True 时, 在构建请求前校验凭证有效性.
+
+        Returns:
+            组装好的 Request 或衍生子类描述符.
+
+        Raises:
+            ValueError: 如果同时提供 pager_meta 和 refresh_meta 时抛出.
+            CredentialInvalidError: 如果 require_login 为 True 且凭证无效时抛出.
         """
         from ..core.request import PaginatedRequest, RefreshableRequest, Request
 
         if pager_meta is not None and refresh_meta is not None:
             raise ValueError("pager_meta 与 refresh_meta 不能同时声明")
+
+        if require_login:
+            credential = self._require_login(credential)
 
         common_kwargs = {
             "_client": self._client,
@@ -306,10 +335,14 @@ class ApiModule:
             "param": param,
             "response_model": response_model,
             "comm": comm,
+            "override_comm": override_comm,
             "is_jce": is_jce,
             "preserve_bool": preserve_bool,
             "credential": credential,
             "platform": platform,
+            "allow_error_codes": allow_error_codes,
+            "parse_on_allow": parse_on_allow,
+            "sign": sign,
         }
         if pager_meta is not None:
             return PaginatedRequest(**common_kwargs, pager_meta=pager_meta)
